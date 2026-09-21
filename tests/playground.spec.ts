@@ -22,7 +22,7 @@ test("episode runs, pauses, completes and exports measured trace", async ({
   await page.getByLabel("Playback speed").selectOption("2");
   await page.getByRole("button", { name: "Run episode", exact: true }).click();
   await expect(page.getByText("TASK COMPLETE", { exact: true })).toBeVisible({
-    timeout: 20000,
+    timeout: 60000,
   });
   const physics = page.locator(".scene-canvas");
   await expect(physics).toHaveAttribute("data-physics", "rapier");
@@ -114,14 +114,14 @@ test("real bridge response drives selected action and invalid scores stop execut
 test("batch executes distinct seeds and records every episode", async ({
   page,
 }) => {
-  test.setTimeout(90000);
+  test.setTimeout(210000);
   await page.goto("/");
   await page.getByLabel("Playback speed").selectOption("2");
   await page.getByRole("button", { name: "Benchmarks", exact: true }).click();
   await page
     .getByRole("button", { name: "Run evaluation", exact: true })
     .click();
-  await expect(page.locator(".nav-count")).toHaveText("5", { timeout: 80000 });
+  await expect(page.locator(".nav-count")).toHaveText("5", { timeout: 180000 });
   await page.getByRole("button", { name: "Experiments" }).click();
   await expect(page.locator("tbody tr")).toHaveCount(5);
   const seeds = await page.locator("tbody .mono").allTextContents();

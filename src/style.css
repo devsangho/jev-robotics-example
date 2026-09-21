@@ -97,9 +97,6 @@ button:hover:not(:disabled) {
   letter-spacing: -1.5px;
   line-height: 1.1;
 }
-.brand-light {
-  font-weight: 400;
-}
 .brand small {
   display: block;
   font-size: 12px;
@@ -132,40 +129,6 @@ button:hover:not(:disabled) {
 }
 .logo-mark span:nth-child(4) {
   border-radius: 2px 8px 2px 2px;
-}
-.workspace {
-  display: flex;
-  gap: 9px;
-  align-items: center;
-  padding: 11px 9px;
-  border: 1px solid #dde2d7;
-  border-radius: 7px;
-  background: #f7f8f4;
-  font-size: 12px;
-  font-weight: 550;
-  margin-bottom: 28px;
-}
-.workspace > svg {
-  margin-left: auto;
-  color: #7f877a;
-}
-.workspace small {
-  display: block;
-  font-size: 12px;
-  color: #8a9284;
-  margin-top: 4px;
-  font-weight: 400;
-}
-.workspace-avatar {
-  height: 27px;
-  width: 27px;
-  border: 1px solid #dde1d6;
-  border-radius: 5px;
-  display: grid;
-  place-items: center;
-  background: #e7eadf;
-  color: #637056;
-  font-size: 13px;
 }
 .nav-label {
   font-size: 12px;
@@ -248,38 +211,6 @@ button:hover:not(:disabled) {
   font-size: 12px;
   font-weight: 600;
   color: #576e47;
-}
-.user {
-  border-top: 1px solid #dce1d5;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  text-align: left;
-  margin-top: 22px;
-  padding: 20px 0;
-  font-size: 12px;
-  font-weight: 550;
-}
-.avatar {
-  background: #dde5d3;
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: #637c52;
-}
-.user small {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-  color: #909787;
-  font-weight: 400;
-}
-.user > svg {
-  margin-left: auto;
-  color: #84917c;
 }
 .main-shell {
   margin-left: 232px;
@@ -1664,13 +1595,6 @@ td small {
   .brand {
     padding: 0 8px;
   }
-  .workspace {
-    padding: 10px 6px;
-    font-size: 12px;
-  }
-  .workspace small {
-    font-size: 12px;
-  }
   .benchmark-card-body {
     padding: 16px;
   }
@@ -1687,9 +1611,6 @@ td small {
   }
   .main-shell {
     margin-left: 175px;
-  }
-  .workspace-avatar {
-    display: none;
   }
   .brand {
     font-size: 25px;
@@ -1774,7 +1695,6 @@ td small {
     margin-bottom: 35px;
   }
   .brand > span:not(.logo-mark),
-  .workspace,
   .nav-label,
   .sidebar-bottom,
   .nav-item .push,
@@ -2210,9 +2130,6 @@ td small {
 }
 .nav-item {
   font-size: 14px;
-}
-.workspace {
-  font-size: 12px;
 }
 .button {
   font-size: 13px;

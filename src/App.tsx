@@ -561,7 +561,7 @@ export default function App() {
                         ? "Browser · Three.js"
                         : mode === "openjev"
                           ? "Local Python bridge"
-                          : `Browser · ${browserDevice === "webgpu" ? "WebGPU" : "WASM CPU"}`}{" "}
+                          : "Browser · WebGPU"}{" "}
                       <i className="small-dot" />
                     </span>
                   </div>
@@ -643,7 +643,13 @@ export default function App() {
                         ) : (
                           <>
                             <span className="small-dot" />{" "}
-                            {running ? "EXECUTING" : "READY TO EXPLORE"}
+                            {world.settling
+                              ? "RELEASING & SETTLING"
+                              : world.holding
+                                ? "GRIPPER CLOSED"
+                                : running
+                                  ? "EXECUTING"
+                                  : "READY TO EXPLORE"}
                           </>
                         )}
                       </span>

@@ -51,7 +51,14 @@ export default function Scene({
       );
       return;
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    const gl = renderer.getContext();
+    const rendererInfo = gl.getExtension("WEBGL_debug_renderer_info");
+    const softwareRenderer =
+      rendererInfo &&
+      /SwiftShader|llvmpipe|Software/i.test(
+        gl.getParameter(rendererInfo.UNMASKED_RENDERER_WEBGL),
+      );
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setClearColor("#ebeeec");
@@ -74,7 +81,12 @@ export default function Scene({
     const sun = new THREE.DirectionalLight("#fff8ec", 4);
     sun.position.set(-3, 6, 3);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.mapSize.set(
+      softwareRenderer ? 512 : 1024,
+      softwareRenderer ? 512 : 1024,
+    );
+    sun.shadow.autoUpdate = false;
+    sun.shadow.needsUpdate = true;
     sun.shadow.camera.left = -4;
     sun.shadow.camera.right = 4;
     sun.shadow.camera.top = 4;
@@ -247,6 +259,9 @@ export default function Scene({
     );
     scene.add(path);
     const tip = new THREE.Vector3(...latest.current.world.grip);
+    const lastShadowTip = new THREE.Vector3(100, 100, 100),
+      lastShadowCube = new THREE.Vector3(100, 100, 100);
+    let lastShadowAperture = -1;
     let physics: RobotPhysics | undefined,
       disposed = false,
       lastEpisode = -1,
@@ -287,7 +302,7 @@ export default function Scene({
         else camera.position.set(2.9, 2.7, 3.6);
         controls.target.set(0, 0.95, 0);
       }
-      const delta = Math.min((time - lastTime) / 1000 || 1 / 60, 0.05);
+      const delta = Math.min((time - lastTime) / 1000 || 1 / 60, 0.25);
       lastTime = time;
       const goal = new THREE.Vector3(...w.grip);
       if (physics) {
@@ -414,6 +429,16 @@ export default function Scene({
         path.computeLineDistances();
       }
       controls.update();
+      if (
+        lastShadowTip.distanceToSquared(tip) > 1e-6 ||
+        lastShadowCube.distanceToSquared(cube.position) > 1e-6 ||
+        Math.abs(lastShadowAperture - aperture) > 0.001
+      ) {
+        sun.shadow.needsUpdate = true;
+        lastShadowTip.copy(tip);
+        lastShadowCube.copy(cube.position);
+        lastShadowAperture = aperture;
+      }
       renderer.render(scene, camera);
       if (frame.current && time - lastShot > 800) {
         lastShot = time;
