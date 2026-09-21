@@ -6,7 +6,6 @@ import {
   ArrowUpRight,
   Box,
   Check,
-  ChevronDown,
   ChevronRight,
   CircleHelp,
   Code2,
@@ -23,7 +22,6 @@ import {
   Play,
   Plus,
   RotateCcw,
-  Settings2,
   ShieldCheck,
   SlidersHorizontal,
   Terminal,
@@ -40,7 +38,7 @@ import {
   type RunRecord,
   type World,
 } from "./simulation";
-import { decide, loadBrowser, type Mode } from "./inference";
+import { decide, loadBrowser, cancelBrowserLoad, type Mode } from "./inference";
 
 function Logo() {
   return (
@@ -82,7 +80,7 @@ function readHistory(): RunRecord[] {
 const modeNames: Record<Mode, string> = {
   demo: "Scripted demo",
   openjev: "OpenJEV · local",
-  browser: "Qwen · browser",
+  browser: "Open-Jev DeBERTa · browser",
 };
 export default function App() {
   const [tab, setTab] = useState("Playground"),
@@ -91,6 +89,7 @@ export default function App() {
   const [seed, setSeed] = useState(42),
     [world, setWorld] = useState<World>(() => initialWorld(42)),
     [running, setRunning] = useState(false),
+    [sceneReady, setSceneReady] = useState(false),
     [busy, setBusy] = useState(false),
     [decision, setDecision] = useState<Decision | null>(null),
     [decisions, setDecisions] = useState<Decision[]>([]);
@@ -100,6 +99,7 @@ export default function App() {
     [connection, setConnection] = useState("Not connected"),
     [loading, setLoading] = useState(false),
     [browserReady, setBrowserReady] = useState(false),
+    [browserDevice, setBrowserDevice] = useState(""),
     [progress, setProgress] = useState(""),
     [error, setError] = useState("");
   const [view, setView] = useState("Orbit"),
@@ -117,7 +117,15 @@ export default function App() {
   const saved = useRef(false);
   const viewport = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    setGpu("gpu" in navigator);
+    const gpu = (
+      navigator as Navigator & {
+        gpu?: { requestAdapter: () => Promise<unknown> };
+      }
+    ).gpu;
+    gpu
+      ?.requestAdapter()
+      .then((a) => setGpu(!!a))
+      .catch(() => setGpu(false));
   }, []);
   useEffect(() => {
     try {
@@ -164,6 +172,7 @@ export default function App() {
     setRunning(false);
     setBusy(false);
     stepLock.current = false;
+    setSceneReady(false);
     setWorld(initialWorld(nextSeed));
     setDecision(null);
     setDecisions([]);
@@ -176,7 +185,14 @@ export default function App() {
     setTaskId(id);
   }
   async function step() {
-    if (stepLock.current || world.success || world.step >= 20) return;
+    if (
+      stepLock.current ||
+      world.success ||
+      world.step >= 20 ||
+      !sceneReady ||
+      world.settling
+    )
+      return;
     stepLock.current = true;
     setBusy(true);
     const g = generation.current;
@@ -185,6 +201,7 @@ export default function App() {
     try {
       const d = await decide(mode, world, task, endpoint, abort.signal);
       if (g !== generation.current) return;
+      setSceneReady(false);
       setDecision(d);
       setDecisions((ds) => [...ds, d]);
       setWorld((w) => advance(w, d.action, task));
@@ -202,10 +219,18 @@ export default function App() {
     }
   }
   useEffect(() => {
-    if (!running || busy || world.success || world.step >= 20) return;
+    if (
+      !running ||
+      busy ||
+      world.success ||
+      world.step >= 20 ||
+      !sceneReady ||
+      world.settling
+    )
+      return;
     const timer = setTimeout(() => void step(), 950 / Number(speed));
     return () => clearTimeout(timer);
-  }, [running, busy, world, mode, taskId, speed]);
+  }, [running, busy, world, mode, taskId, speed, sceneReady]);
   useEffect(() => {
     if ((world.success || world.step >= 20) && !saved.current) {
       saved.current = true;
@@ -271,17 +296,22 @@ export default function App() {
       setLoading(false);
     }
   }
-  async function load() {
+  async function load(startEpisode = false) {
     setLoading(true);
+    setError("");
     setProgress("Preparing browser runtime…");
     try {
-      await loadBrowser(setProgress);
+      const runtime = await loadBrowser(setProgress);
+      setBrowserDevice(runtime.device);
       setBrowserReady(true);
       reset();
       setMode("browser");
+      if (startEpisode) setRunning(true);
       setProgress("Ready. Inference runs on this device.");
     } catch (e) {
-      setProgress(e instanceof Error ? e.message : String(e));
+      const message = e instanceof Error ? e.message : String(e);
+      setProgress(message);
+      if (!message.includes("cancelled")) setError(message);
     } finally {
       setLoading(false);
     }
@@ -291,7 +321,7 @@ export default function App() {
   const exportAll = () =>
     download({
       schema: "robotics-playground/v1",
-      environment: "kinematic-threejs-demo",
+      environment: "rapier-threejs-playground",
       officialLibero: false,
       records: history,
     });
@@ -306,17 +336,10 @@ export default function App() {
           <Logo />
           <span>
             playground
-            <small>INDEPENDENT ROBOTICS SANDBOX</small>
+            <small>ROBOTICS PLAYGROUND</small>
           </span>
         </a>
-        <div className="workspace">
-          <span className="workspace-avatar">P</span>
-          <div>
-            Personal workspace<small>Local environment</small>
-          </div>
-          <ChevronDown size={15} />
-        </div>
-        <div className="nav-label">WORKSPACE</div>
+        <div className="nav-label">DEMO</div>
         <nav>
           {[
             { name: "Playground", icon: Box },
@@ -326,7 +349,11 @@ export default function App() {
             <button
               key={name}
               className={tab === name ? "nav-item selected" : "nav-item"}
-              onClick={() => setTab(name)}
+              onClick={() => {
+                setRunning(false);
+                setBatchRemaining(0);
+                setTab(name);
+              }}
             >
               <Icon size={18} />
               {name}
@@ -349,12 +376,12 @@ export default function App() {
         </button>
         <a
           className="nav-item"
-          href="https://huggingface.co/AlexWortega/openjev"
+          href="https://huggingface.co/onnx-community/open-jev-deberta-v3-large-ONNX"
           target="_blank"
           rel="noreferrer"
         >
           <Workflow size={18} />
-          OpenJEV
+          Browser model
           <ArrowUpRight size={14} className="push" />
         </a>
         <div className="sidebar-bottom">
@@ -363,31 +390,21 @@ export default function App() {
               <ShieldCheck size={19} />
             </span>
             <strong>Your machine. Your models.</strong>
-            <p>
-              Explore embodied AI with a<br />
-              local-first workspace.
-            </p>
+            <p>A model, a robot, and your browser.</p>
             <button onClick={() => setModal("runtime")}>
               Configure runtime <ArrowRight size={14} />
             </button>
           </div>
-          <button className="user" onClick={() => setModal("runtime")}>
-            <span className="avatar">L</span>
-            <span>
-              Local researcher<small>Personal workspace</small>
-            </span>
-            <Settings2 size={16} />
-          </button>
         </div>
       </aside>
       <div className="main-shell">
         <header className="topbar">
           <div className="breadcrumb">
-            Workspace <ChevronRight size={13} /> <span>{tab}</span>
+            Robotics demo <ChevronRight size={13} /> <span>{tab}</span>
           </div>
           <div className="topbar-right">
             <span className="local-status">
-              <i /> Local workspace
+              <i /> On-device inference
             </span>
             <a
               href="https://github.com/devsangho/jev-robotics-example"
@@ -408,19 +425,17 @@ export default function App() {
         <main>
           <div className="page-heading">
             <div>
-              <div className="eyebrow">
-                EMBODIED INTELLIGENCE, WITH A LITTLE CURIOSITY
-              </div>
+              <div className="eyebrow">OBSERVE → EVALUATE → ACT</div>
               <h1>
                 {tab === "Playground"
-                  ? "From observation to action."
+                  ? "Fast judgments. Measured locally."
                   : tab === "Experiments"
                     ? "Every run, a little insight."
                     : "Put your policy to the test."}
               </h1>
               <p>
                 {tab === "Playground"
-                  ? "A hands-on space to explore how robots see, decide, and interact."
+                  ? "One forward pass. Candidate scores. A robot’s next move—without generating a sentence."
                   : tab === "Experiments"
                     ? "Inspect and export the episodes you have run on this device."
                     : "Repeat tasks across seeds and inspect local evaluation results."}
@@ -432,6 +447,57 @@ export default function App() {
           </div>
           {tab === "Playground" ? (
             <>
+              <section
+                className="browser-onboarding"
+                aria-label="Run locally in your browser"
+              >
+                <span className="onboarding-icon">
+                  <Cpu size={22} />
+                </span>
+                <div>
+                  <strong>One forward pass. One decision.</strong>
+                  <p>
+                    Open-Jev DeBERTa · No server, no Python, no API key.
+                    Download once, run on your device.
+                  </p>
+                  {progress && (
+                    <p className="browser-progress" role="status">
+                      {progress}
+                    </p>
+                  )}
+                </div>
+                {loading ? (
+                  <button
+                    className="button light"
+                    onClick={() => cancelBrowserLoad()}
+                  >
+                    Cancel download
+                  </button>
+                ) : (
+                  <button
+                    className="button primary"
+                    disabled={running || busy || !gpu}
+                    onClick={() => {
+                      if (browserReady) {
+                        reset();
+                        setMode("browser");
+                        setRunning(true);
+                      } else void load(true);
+                    }}
+                  >
+                    {browserReady ? (
+                      <Play size={14} />
+                    ) : (
+                      <ArrowDownToLine size={14} />
+                    )}{" "}
+                    {browserReady
+                      ? "Run with Open-Jev"
+                      : gpu
+                        ? "Load Open-Jev · 480 MB"
+                        : "WebGPU required"}
+                  </button>
+                )}
+              </section>
               <div className="config-strip">
                 <div className="config-item">
                   <span className="field-icon">
@@ -478,7 +544,9 @@ export default function App() {
                     >
                       <option value="demo">Scripted candidate policy</option>
                       <option value="openjev">OpenJEV · Qwen 4B</option>
-                      <option value="browser">Qwen 0.6B · WebGPU</option>
+                      <option value="browser">
+                        Open-Jev DeBERTa · Browser
+                      </option>
                     </select>
                   </label>
                 </div>
@@ -493,7 +561,7 @@ export default function App() {
                         ? "Browser · Three.js"
                         : mode === "openjev"
                           ? "Local Python bridge"
-                          : "Browser · WebGPU"}{" "}
+                          : `Browser · ${browserDevice === "webgpu" ? "WebGPU" : "WASM CPU"}`}{" "}
                       <i className="small-dot" />
                     </span>
                   </div>
@@ -544,6 +612,20 @@ export default function App() {
                       cameraView={view}
                       resetCamera={cameraReset}
                       onFrame={setFrame}
+                      onMotionComplete={(position) => {
+                        setSceneReady(true);
+                        setWorld((w) => ({ ...w, object: position }));
+                      }}
+                      onSettled={(success, position) => {
+                        setWorld((w) => ({
+                          ...w,
+                          object: position,
+                          settling: false,
+                          success,
+                          step: success ? w.step : 20,
+                        }));
+                        setSceneReady(true);
+                      }}
                     />
                     <div className="scene-top">
                       <span className="scene-label">
@@ -566,7 +648,7 @@ export default function App() {
                         )}
                       </span>
                       <div>
-                        Kinematic demo <span>•</span> Franka-inspired arm
+                        Rapier physics <span>•</span> Franka-inspired arm
                       </div>
                     </div>
                     <div className="camera-tools">
@@ -629,7 +711,12 @@ export default function App() {
                         aria-label="Step once"
                         title="Step once"
                         disabled={
-                          running || busy || world.success || world.step >= 20
+                          running ||
+                          busy ||
+                          !sceneReady ||
+                          world.settling ||
+                          world.success ||
+                          world.step >= 20
                         }
                         onClick={() => void step()}
                       >
@@ -691,16 +778,16 @@ export default function App() {
                       <div>
                         <strong>
                           {mode === "demo"
-                            ? "OpenJEV playground"
+                            ? "Scripted preview"
                             : mode === "openjev"
                               ? "OpenJEV · Qwen 4B"
-                              : "Qwen3 · 0.6B"}
+                              : "Open-Jev · DeBERTa"}
                           <span className="tag orange">
                             {mode === "demo"
                               ? "DEMO"
                               : mode === "openjev"
                                 ? "LOCAL"
-                                : "WEBGPU"}
+                                : "ON-DEVICE"}
                           </span>
                         </strong>
                         <p>
@@ -708,7 +795,7 @@ export default function App() {
                             ? "Scripted scores · no model loaded"
                             : mode === "openjev"
                               ? "NLI candidate action scoring"
-                              : "Generated choice · not OpenJEV"}
+                              : "Typed decisions · no text generation"}
                         </p>
                       </div>
                     </div>
@@ -789,7 +876,7 @@ export default function App() {
                       <span>
                         <Activity size={13} />{" "}
                         {mode === "browser"
-                          ? "Choice indicator"
+                          ? "Option probability"
                           : "Candidate score"}
                       </span>
                       <strong>
@@ -823,6 +910,20 @@ export default function App() {
                   </div>
                   <div className="metric-grid">
                     <div className="metric">
+                      <label>
+                        {mode === "demo"
+                          ? "Scripted latency"
+                          : "Decision latency"}
+                      </label>
+                      <strong>
+                        {decision ? decision.latency.toFixed(1) : "—"}
+                        <small>ms</small>
+                      </strong>
+                      <span className="metric-caption">
+                        Measured on this device
+                      </span>
+                    </div>
+                    <div className="metric">
                       <label>Task progress</label>
                       <strong>
                         {world.phase}
@@ -836,16 +937,6 @@ export default function App() {
                           />
                         ))}
                       </div>
-                    </div>
-                    <div className="metric">
-                      <label>Decision latency</label>
-                      <strong>
-                        {decision ? decision.latency.toFixed(1) : "—"}
-                        <small>ms</small>
-                      </strong>
-                      <span className="metric-caption">
-                        Measured on this device
-                      </span>
                     </div>
                     <div className="metric">
                       <label>Episode status</label>
@@ -891,8 +982,8 @@ export default function App() {
                   <ShieldCheck size={13} /> Local-first by design
                 </span>
                 <p>
-                  LIBERO-inspired scene · scripted candidate policy · not an
-                  official LIBERO evaluation.
+                  LIBERO-inspired scene · {modeNames[mode]} · not an official
+                  LIBERO evaluation.
                 </p>
                 <button onClick={() => setModal("docs")}>
                   How it works <ArrowUpRight size={12} />
@@ -953,7 +1044,7 @@ export default function App() {
                               aria-label={`Export run ${h.id}`}
                               onClick={() =>
                                 download({
-                                  environment: "kinematic-threejs-demo",
+                                  environment: "rapier-threejs-playground",
                                   officialLibero: false,
                                   ...h,
                                 })
@@ -1092,10 +1183,11 @@ export default function App() {
                 <div>
                   <strong>Looking for the real LIBERO benchmark?</strong>
                   <p>
-                    This browser environment uses kinematic task stages.
-                    Official LIBERO needs MuJoCo, its task assets, and a trained
-                    VLA policy. The included Python runner connects your VLA
-                    candidate endpoint to OpenJEV for real evaluation.
+                    This browser environment uses staged arm motion and Rapier
+                    rigid-body physics. Official LIBERO needs MuJoCo, its task
+                    assets, and a trained VLA policy. The included Python runner
+                    connects your VLA candidate endpoint to OpenJEV for real
+                    evaluation.
                   </p>
                   <button
                     className="text-button"
@@ -1178,58 +1270,17 @@ export default function App() {
                     Use scripted demo <ArrowRight size={14} />
                   </button>
                 </div>
-                <div className="runtime-option featured">
-                  <div className="runtime-title">
-                    <Cpu size={19} />
-                    <h3>OpenJEV · Qwen 4B</h3>
-                    <span className="tag orange">LOCAL PYTHON</span>
-                  </div>
-                  <p>
-                    AlexWortega’s actual NLI checkpoint. Start the included
-                    bridge on your machine; the first start downloads model
-                    weights.
-                  </p>
-                  <code>
-                    uvicorn server.app:app --host 127.0.0.1 --port 8000
-                  </code>
-                  <label className="input-label">
-                    Bridge URL
-                    <input
-                      aria-label="OpenJEV bridge URL"
-                      value={endpoint}
-                      onChange={(e) => {
-                        setEndpoint(e.target.value);
-                        setConnection("Not connected");
-                      }}
-                      placeholder="http://127.0.0.1:8000"
-                    />
-                  </label>
-                  <div className="runtime-actions">
-                    <button
-                      className="button primary"
-                      disabled={loading || running || busy}
-                      onClick={() => void connect()}
-                    >
-                      {loading ? (
-                        <LoaderCircle size={14} className="spin" />
-                      ) : (
-                        <Plus size={14} />
-                      )}
-                      Connect OpenJEV
-                    </button>
-                    <span role="status">{connection}</span>
-                  </div>
-                </div>
                 <div className="runtime-option">
                   <div className="runtime-title">
                     <Box size={19} />
-                    <h3>Qwen3 · 0.6B</h3>
-                    <span className="tag">WEBGPU</span>
+                    <h3>Open-Jev · DeBERTa</h3>
+                    <span className="tag">NO SERVER</span>
                   </div>
                   <p>
-                    Optional browser-only alternative using WebLLM. This is a
-                    general Qwen model, not the OpenJEV checkpoint. Downloads
-                    approximately 500 MB on first load.
+                    A real typed-decision model from Kotoba, running entirely on
+                    your device through Transformers.js. Approximately 480 MB on
+                    first load, then cached. This is not AlexWortega’s Qwen 4B
+                    checkpoint. Robotics is an experimental, out-of-domain task.
                   </p>
                   <div className="runtime-actions">
                     <button
@@ -1253,7 +1304,11 @@ export default function App() {
                         : "Load browser model"}
                     </button>
                     <span>
-                      {gpu ? "WebGPU detected" : "WebGPU unavailable"}
+                      {browserDevice
+                        ? `Running on ${browserDevice}`
+                        : gpu
+                          ? "WebGPU detected"
+                          : "Enable WebGPU to load the model"}
                     </span>
                   </div>
                   {progress && (
@@ -1262,6 +1317,53 @@ export default function App() {
                     </p>
                   )}
                 </div>
+                <details className="advanced-runtime">
+                  <summary>
+                    Advanced: optional AlexWortega Qwen 4B bridge
+                  </summary>{" "}
+                  <div className="runtime-option featured">
+                    <div className="runtime-title">
+                      <Cpu size={19} />
+                      <h3>OpenJEV · Qwen 4B</h3>
+                      <span className="tag orange">LOCAL PYTHON</span>
+                    </div>
+                    <p>
+                      AlexWortega’s actual NLI checkpoint. Start the included
+                      bridge on your machine; the first start downloads model
+                      weights.
+                    </p>
+                    <code>
+                      uvicorn server.app:app --host 127.0.0.1 --port 8000
+                    </code>
+                    <label className="input-label">
+                      Bridge URL
+                      <input
+                        aria-label="OpenJEV bridge URL"
+                        value={endpoint}
+                        onChange={(e) => {
+                          setEndpoint(e.target.value);
+                          setConnection("Not connected");
+                        }}
+                        placeholder="http://127.0.0.1:8000"
+                      />
+                    </label>
+                    <div className="runtime-actions">
+                      <button
+                        className="button primary"
+                        disabled={loading || running || busy}
+                        onClick={() => void connect()}
+                      >
+                        {loading ? (
+                          <LoaderCircle size={14} className="spin" />
+                        ) : (
+                          <Plus size={14} />
+                        )}
+                        Connect OpenJEV
+                      </button>
+                      <span role="status">{connection}</span>
+                    </div>
+                  </div>
+                </details>
               </div>
             ) : (
               <div className="modal-body docs">
@@ -1272,17 +1374,19 @@ export default function App() {
                 </p>
                 <h3>01 / The browser playground</h3>
                 <p>
-                  The arm follows a kinematic state machine, with five
-                  manipulation stages. Demo scores are deterministic. OpenJEV
-                  mode scores text descriptions of those stages; the preview
-                  image is for observation only and is not sent to the model.
+                  The arm follows five staged motions; Rapier handles rigid-body
+                  contact and release. There are five manipulation stages. Demo
+                  scores are deterministic. OpenJEV mode scores text
+                  descriptions of those stages; the preview image is for
+                  observation only and is not sent to the model.
                 </p>
-                <h3>02 / Actual OpenJEV inference</h3>
+                <h3>02 / On-device Open-Jev</h3>
                 <p>
-                  Install the Python requirements in{" "}
-                  <code>server/requirements.txt</code>, then start the local
-                  bridge. Qwen 4B runs with PyTorch on your machine. Connect it
-                  under Model runtime. No API key is needed.
+                  Click Load Open-Jev to download the 4-bit DeBERTa
+                  typed-decision model. Inference runs in a browser worker using
+                  WebGPU. No server, Python installation, or API key is needed.
+                  Weights are cached by your browser. Candidate probabilities
+                  come from the actual model.
                 </p>
                 <h3>03 / VLA + official LIBERO</h3>
                 <p>
@@ -1293,12 +1397,13 @@ export default function App() {
                   the repository README.
                 </p>
                 <div className="docs-note">
-                  Browser-only OpenJEV 4B is not implemented: the supplied
-                  checkpoint needs a compatible browser conversion and runtime.
-                  The WebGPU option uses a separate Qwen model.
+                  The browser uses Kotoba’s Open-Jev DeBERTa model, not
+                  AlexWortega’s Qwen 4B. The optional Qwen bridge is for
+                  developers only. Neither this simplified scene nor its
+                  completion rate is an official LIBERO benchmark.
                 </div>
                 <a
-                  href="https://huggingface.co/AlexWortega/openjev"
+                  href="https://huggingface.co/onnx-community/open-jev-deberta-v3-large-ONNX"
                   target="_blank"
                   rel="noreferrer"
                 >

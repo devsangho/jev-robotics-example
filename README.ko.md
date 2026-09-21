@@ -6,7 +6,17 @@ JEV/OpenJEV의 공식 서비스가 아닌 독립적인 Three.js 기반 로보틱
 
 **[플레이그라운드 열기](https://devsangho.github.io/jev-robotics-example/)**
 
-## 바로 실행
+## 서버 없이 바로 사용
+
+1. [Playground에 접속](https://devsangho.github.io/jev-robotics-example/)합니다.
+2. **Load Open-Jev · 480 MB**를 누릅니다. 모델을 한 번 내려받고 브라우저에 캐시합니다.
+3. 모델이 계산한 후보별 확률과 실제 판단 지연시간을 확인합니다.
+
+Python, 서버 실행, API 키가 필요하지 않습니다. 이 양자화 모델의 실행에는 WebGPU가 필요합니다. WebGPU가 없어도 scripted 데모는 사용할 수 있습니다. 실제 다운로드 진행 상황과 취소 기능을 제공하며, 모델 없이 즉시 사용하는 scripted 데모도 남겨두었습니다.
+
+브라우저 모델은 **Kotoba의 Open-Jev DeBERTa**입니다. AlexWortega Qwen 4B와는 다른 체크포인트입니다. 문장을 생성하지 않고 한 번의 forward pass로 다섯 후보의 점수를 계산합니다. 로보틱스는 이 모델의 학습 도메인 밖이므로 확률이 실제 제어 성공을 보장하지 않습니다.
+
+## 개발자용 실행
 
 ```bash
 npm ci
@@ -19,17 +29,17 @@ http://localhost:5173 에서 실행됩니다. `npm run build`로 `dist/`를 만�
 
 | 기능 | 동작 |
 | --- | --- |
-| 3D 플레이그라운드 | 직접 생성한 Three.js 로봇 팔, 작업대, 물체, 경로, 카메라 조작 |
+| 3D 플레이그라운드 | Three.js 로봇 팔·카메라 및 Rapier 충돌·중력·그립 제약·놓기 동작 |
 | 데모 정책 | 5단계의 결정론적 행동 및 점수. 학습 모델이 아닙니다 |
 | OpenJEV 연결 | AlexWortega Qwen 4B NLI 모델을 로컬 Python 서버로 실행하고 실제 entailment 점수로 다음 단계를 선택 |
-| WebGPU 대안 | WebLLM Qwen3 0.6B 모델을 브라우저에 내려받아 JSON 행동 선택. OpenJEV 체크포인트와 다릅니다 |
+| 브라우저 모델 | Open-Jev DeBERTa q4를 Transformers.js로 실행. 실제 후보별 확률, WebGPU, 서버 불필요 |
 | 반복 실험 | 3개 작업, seed별 초기 위치, 최대 20단계, 실행/일시정지/단일 단계/리셋 |
 | 기록 | 브라우저 localStorage에 최대 50개 에피소드, 실제 클라이언트 왕복 시간, 행동 점수, JSON 내보내기 |
 | 실제 LIBERO 연동 | 별도 Python CLI로 MuJoCo와 사용자 VLA endpoint에 연결. 설치된 VLA 서버가 필요합니다 |
 
-**브라우저 장면은 LIBERO에서 영감을 받은 운동학 데모입니다.** 충돌/접촉 물리, 정식 Franka 관절 운동학, LIBERO 환경 또는 pretrained VLA 실행을 흉내 내어 실측 결과로 표시하지 않습니다. 브라우저 OpenJEV 모드는 알려진 작업 단계가 포함된 텍스트 상태를 입력합니다. 시각적 일반화 성능을 측정하는 실험이 아닙니다. 관측 카메라 미리보기 이미지는 OpenJEV에 전송하지 않습니다.
+**브라우저 장면은 LIBERO에서 영감을 받은 물리 데모입니다.** Rapier로 물체·테이블·그릇·그리퍼의 충돌을 처리하고 fixed joint로 잡기를 구현합니다. 손가락이 열린 뒤 중력으로 물체가 떨어지고 목적지에 안착해야 성공입니다. 로봇 팔은 단계별 경로를 따르며 정식 Franka 관절 동역학, 공식 LIBERO 환경 또는 pretrained VLA는 아닙니다. 브라우저 모델에는 시뮬레이터의 텍스트 관측 상태를 입력합니다. 시각적 일반화 성능을 측정하는 실험이 아닙니다. 관측 카메라 미리보기 이미지는 OpenJEV에 전송하지 않습니다.
 
-브라우저용 OpenJEV 4B 체크포인트 변환은 포함하지 않았습니다. 공식 PyTorch 체크포인트와 WebLLM Qwen 모델은 서로 다른 모델입니다. 브라우저 Qwen 모드에서 표시하는 0/100%는 선택 표시이며 보정된 확률이 아닙니다. OpenJEV 점수는 후보별 NLI entailment 확률로, 후보 전체의 합이 1일 필요가 없습니다.
+브라우저용 AlexWortega 4B 변환본은 포함하지 않습니다. 서버 없는 실행을 우선해 Kotoba의 Open-Jev DeBERTa를 사용합니다. DeBERTa 점수는 후보 logits에 원본 모델의 temperature 1.05를 적용한 softmax이며, 로보틱스에 맞춰 보정된 확률은 아닙니다. 선택적으로 사용하는 AlexWortega bridge 점수는 후보별 NLI entailment 확률로 합이 1일 필요가 없습니다.
 
 ## GitHub Pages 배포
 
@@ -55,9 +65,9 @@ npm run preview
 # http://localhost:4173/jev-robotics-example/
 ```
 
-GitHub Pages는 Python 서버를 실행하지 않습니다. 3D 데모와 WebGPU 대안은 정적 사이트에서 동작하며, 실제 OpenJEV는 각 사용자가 로컬 서버를 실행해야 합니다. HTTPS 사이트에서 loopback HTTP 접속은 브라우저의 로컬 네트워크 권한 및 정책에 영향을 받습니다. 허용되지 않으면 로컬 개발 주소에서 사용하거나 신뢰된 HTTPS 로컬 프록시를 설정하세요. API 토큰은 필요하지 않습니다.
+GitHub Pages는 Python 서버를 실행하지 않습니다. 3D 데모와 실제 Open-Jev DeBERTa는 정적 사이트에서 사용자 기기로 실행합니다. 선택적인 AlexWortega Qwen bridge만 별도 프로세스가 필요합니다. HTTPS 사이트에서 loopback HTTP 접속은 브라우저의 로컬 네트워크 권한 및 정책에 영향을 받습니다. 허용되지 않으면 로컬 개발 주소에서 사용하거나 신뢰된 HTTPS 로컬 프록시를 설정하세요. API 토큰은 필요하지 않습니다.
 
-## AlexWortega OpenJEV 4B
+## 개발자용 선택 기능: AlexWortega OpenJEV 4B
 
 Python 3.11 이상 권장. CUDA, Apple MPS 또는 CPU를 자동 선택합니다. 체크포인트 다운로드에는 약 9 GB 이상의 디스크 공간이 필요하며 모델 및 추론 버퍼를 위한 충분한 메모리도 필요합니다. CPU에서는 float32로 로드하므로 메모리 요구량이 더 큽니다.
 
@@ -99,9 +109,13 @@ CORS는 localhost 개발 주소와 지정한 Pages origin만 허용합니다. Or
 
 응답: `scores`는 후보 순서의 entailment 확률, `probabilities`는 후보별 `[contradiction, entailment, neutral]`입니다. 요청당 후보는 1~16개, 텍스트는 2048 token까지 잘립니다. 웹 데모는 5개 후보를 사용합니다.
 
-## 브라우저 WebGPU 모델
+## 브라우저 모델 구현
 
-**Model runtime → Qwen3 0.6B → Load browser model**에서 명시적으로 다운로드를 시작합니다. `Qwen3-0.6B-q4f16_1-MLC` 가중치와 WebLLM 실행 자산을 다운로드하며 브라우저 캐시에 보관합니다. WebGPU를 지원하는 브라우저/기기에서 실행하세요. WebGPU가 없으면 다운로드 버튼이 비활성화됩니다. 메모리 부족·다운로드 실패·잘못된 응답은 오류로 표시하고 scripted 정책으로 자동 대체하지 않습니다.
+[`onnx-community/open-jev-deberta-v3-large-ONNX`](https://huggingface.co/onnx-community/open-jev-deberta-v3-large-ONNX)의 q4 모델을 사용합니다. 그래프와 외부 가중치가 약 478 MB이며 tokenizer와 runtime 자산을 추가로 받습니다.
+
+`src/decision.worker.ts`에서 state/question/option span 입력을 구성하고 한 번의 forward pass와 softmax를 실행합니다. 입력은 기기를 떠나지 않습니다. 최대 문맥은 512 token이며 state는 256 token으로 제한됩니다. 모델 모드에서 텍스트 생성이나 가짜 점수를 사용하지 않습니다.
+
+추론은 별도 Worker에서 실행합니다. GitHub Pages에는 COOP/COEP 헤더를 설정할 수 없어 ONNX의 WASM 연결부는 한 스레드를 사용합니다. 실제 q4 모델의 GatherBlockQuantized 연산은 WebGPU가 필요하며 검증한 runtime의 CPU 경로에서는 지원되지 않습니다. 브라우저 캐시는 저장소 설정에 따라 달라지며, 사이트 데이터를 지우면 가중치를 다시 받습니다. 다운로드 실패·추론 오류는 표시하고 scripted 정책으로 몰래 대체하지 않습니다.
 
 ## 실제 LIBERO + VLA 실험
 
@@ -169,8 +183,11 @@ Playwright는 실제 WebGL canvas, 에피소드 실행·리셋·기록·export·
 - [AlexWortega OpenJEV 모델 및 NLI 인터페이스](https://huggingface.co/AlexWortega/openjev)
 - [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO)
 - [OpenVLA LIBERO evaluation](https://github.com/openvla/openvla/blob/main/experiments/robot/libero/run_libero_eval.py)
-- [WebLLM](https://webllm.mlc.ai/docs/user/basic_usage.html)
+- [브라우저 Open-Jev 모델 카드와 입력 규격](https://huggingface.co/onnx-community/open-jev-deberta-v3-large-ONNX)
+- [Transformers.js](https://github.com/huggingface/transformers.js)
 
 독립 실험 프로젝트이며 JEV, OpenJEV 또는 LIBERO 공식 서비스가 아닙니다.
 
 방문자 지도: 사용자 지정 MapMyVisitors 스크립트를 트래킹 용도로 유지하고 지도 UI는 숨깁니다. 스크립트는 외부 서비스에서 로드되며, 로컬 모델 추론과는 별개입니다.
+
+실제 브라우저 모델 smoke test: `npm run preview`를 켜고 `node scripts/browser-model-smoke.mjs`를 실행하면 약 480 MB 모델을 실제 다운로드하고 한 번의 판단을 검증합니다. 기본 CI 테스트에는 포함하지 않습니다.

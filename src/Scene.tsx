@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Task, World } from "./simulation";
+import { createPhysics, type RobotPhysics } from "./physics";
 
 export default function Scene({
   world,
@@ -9,16 +10,22 @@ export default function Scene({
   cameraView,
   resetCamera,
   onFrame,
+  onMotionComplete,
+  onSettled,
 }: {
   world: World;
   task: Task;
   cameraView: string;
   resetCamera: number;
   onFrame?: (url: string) => void;
+  onMotionComplete: (position: [number, number, number]) => void;
+  onSettled: (success: boolean, position: [number, number, number]) => void;
 }) {
   const mount = useRef<HTMLDivElement>(null),
     latest = useRef({ world, task }),
     frame = useRef(onFrame);
+  const callbacks = useRef({ onMotionComplete, onSettled });
+  callbacks.current = { onMotionComplete, onSettled };
   const view = useRef(cameraView);
   const reset = useRef(resetCamera);
   const [error, setError] = useState("");
@@ -211,7 +218,7 @@ export default function Scene({
       new THREE.Vector2(0.13, 0.018),
       new THREE.Vector2(0, 0.018),
     ];
-    mesh(
+    const bowlMesh = mesh(
       new THREE.LatheGeometry(points, 64),
       mat("#f2eee4", 0.3),
       [0, 0, 0],
@@ -240,6 +247,30 @@ export default function Scene({
     );
     scene.add(path);
     const tip = new THREE.Vector3(...latest.current.world.grip);
+    let physics: RobotPhysics | undefined,
+      disposed = false,
+      lastEpisode = -1,
+      lastTime = 0,
+      accumulator = 0,
+      aperture = 0.12,
+      motionKey = "",
+      observedMotionKey = "",
+      motionSeconds = 0,
+      settledFor = 0,
+      releaseFor = 0,
+      reportedSettlement = false;
+    createPhysics(
+      new Float32Array(bowlMesh.geometry.attributes.position.array),
+      new Uint32Array(bowlMesh.geometry.index!.array),
+    )
+      .then((p) => {
+        if (disposed) {
+          p.free();
+          return;
+        }
+        physics = p;
+      })
+      .catch((e) => setError(`Physics could not start: ${String(e)}`));
     let lastView = "",
       lastReset = -1,
       lastShot = 0,
@@ -256,8 +287,91 @@ export default function Scene({
         else camera.position.set(2.9, 2.7, 3.6);
         controls.target.set(0, 0.95, 0);
       }
-      tip.lerp(new THREE.Vector3(...w.grip), 0.065);
-      cube.position.lerp(new THREE.Vector3(...w.object), 0.07);
+      const delta = Math.min((time - lastTime) / 1000 || 1 / 60, 0.05);
+      lastTime = time;
+      const goal = new THREE.Vector3(...w.grip);
+      if (physics) {
+        if (lastEpisode !== w.id) {
+          setError("");
+          physics.reset(w, t);
+          lastEpisode = w.id;
+          tip.copy(goal);
+          aperture = 0.12;
+          motionKey = "";
+          reportedSettlement = false;
+          releaseFor = 0;
+          settledFor = 0;
+          accumulator = 0;
+        }
+        accumulator += delta;
+        while (accumulator >= 1 / 120) {
+          tip.lerp(goal, 1 - Math.exp(-8 / 120));
+          const near = tip.distanceTo(goal) < 0.006;
+          const targetAperture =
+            w.holding && (w.phase > 2 || near) ? 0.077 : 0.12;
+          aperture += (targetAperture - aperture) * (1 - Math.exp(-10 / 120));
+          physics.update(tip, aperture, w.holding, near);
+          accumulator -= 1 / 120;
+        }
+        cube.position.copy(physics.position);
+        cube.quaternion.copy(physics.rotation);
+        host.dataset.physics = "rapier";
+        host.dataset.objectPosition = JSON.stringify([
+          cube.position.x,
+          cube.position.y,
+          cube.position.z,
+        ]);
+        host.dataset.gripperAperture = String(aperture);
+        host.dataset.holding = String(physics.holding);
+        const key = `${w.id}:${w.step}`;
+        if (observedMotionKey !== key) {
+          observedMotionKey = key;
+          motionSeconds = 0;
+        }
+        if (motionKey !== key && !w.settling && !w.success) {
+          motionSeconds += delta;
+          if (motionSeconds > 8 && !reportedSettlement) {
+            reportedSettlement = true;
+            setError("Motion could not finish. Reset the episode to retry.");
+            callbacks.current.onSettled(false, [
+              cube.position.x,
+              cube.position.y,
+              cube.position.z,
+            ]);
+          }
+        }
+        const atTarget = tip.distanceTo(goal) < 0.006;
+        const handReady = w.holding
+          ? physics.holding && aperture < 0.079
+          : !physics.holding && aperture > 0.118;
+        if (atTarget && handReady && motionKey !== key && !w.settling) {
+          motionKey = key;
+          callbacks.current.onMotionComplete([
+            cube.position.x,
+            cube.position.y,
+            cube.position.z,
+          ]);
+        }
+        if (w.settling && !physics.holding) {
+          releaseFor += delta;
+          settledFor = physics.velocity < 0.035 ? settledFor + delta : 0;
+          if (!reportedSettlement && (settledFor > 0.45 || releaseFor > 5)) {
+            reportedSettlement = true;
+            const onTarget =
+              Math.hypot(
+                cube.position.x - t.target[0],
+                cube.position.z - t.target[1],
+              ) < 0.13 &&
+              cube.position.y > 0.83 &&
+              cube.position.y < 1.02;
+            callbacks.current.onSettled(onTarget && settledFor > 0.45, [
+              cube.position.x,
+              cube.position.y,
+              cube.position.z,
+            ]);
+          }
+        }
+      }
       (cube.material as THREE.MeshStandardMaterial).color.set(t.color);
       const shoulder = new THREE.Vector3(base.x, 1.18, base.z);
       const elbow = new THREE.Vector3(-1.05, 1.85, 0.15);
@@ -279,13 +393,7 @@ export default function Scene({
       fingers.forEach((f, i) =>
         f.position
           .copy(tip)
-          .add(
-            new THREE.Vector3(
-              (i ? 1 : -1) * (w.holding ? 0.043 : 0.075),
-              -0.19,
-              0,
-            ),
-          ),
+          .add(new THREE.Vector3((i ? 1 : -1) * aperture, -0.19, 0)),
       );
       ring.position.x = t.target[0];
       ring.position.z = t.target[1];
@@ -322,6 +430,8 @@ export default function Scene({
     resize.observe(host);
     raf = requestAnimationFrame(animate);
     return () => {
+      disposed = true;
+      physics?.free();
       cancelAnimationFrame(raf);
       resize.disconnect();
       controls.dispose();

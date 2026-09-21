@@ -14,7 +14,7 @@ test("episode runs, pauses, completes and exports measured trace", async ({
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "From observation to action." }),
+    page.getByRole("heading", { name: "Fast judgments. Measured locally." }),
   ).toBeVisible();
   await expect(page.locator("canvas")).toBeVisible();
   await page.getByRole("button", { name: "Step once", exact: true }).click();
@@ -22,8 +22,22 @@ test("episode runs, pauses, completes and exports measured trace", async ({
   await page.getByLabel("Playback speed").selectOption("2");
   await page.getByRole("button", { name: "Run episode", exact: true }).click();
   await expect(page.getByText("TASK COMPLETE", { exact: true })).toBeVisible({
-    timeout: 10000,
+    timeout: 20000,
   });
+  const physics = page.locator(".scene-canvas");
+  await expect(physics).toHaveAttribute("data-physics", "rapier");
+  await expect(physics).toHaveAttribute("data-holding", "false");
+  expect(
+    Number(await physics.getAttribute("data-gripper-aperture")),
+  ).toBeGreaterThan(0.118);
+  const finalPosition = JSON.parse(
+    (await physics.getAttribute("data-object-position"))!,
+  );
+  expect(finalPosition[1]).toBeGreaterThan(0.87);
+  expect(finalPosition[1]).toBeLessThan(1.02);
+  expect(
+    Math.hypot(finalPosition[0] - 0.58, finalPosition[2] - 0.28),
+  ).toBeLessThan(0.13);
   await page.getByRole("button", { name: "Experiments" }).click();
   await expect(page.locator("tbody tr")).toHaveCount(1);
   const [download] = await Promise.all([
@@ -55,8 +69,9 @@ test("task selection, camera, reset and failed model connection", async ({
   await expect(page.locator(".step-count strong")).toHaveText("000");
   await page
     .getByRole("button", { name: "Configure runtime", exact: true })
-    .first()
+    .last()
     .click();
+  await page.getByText("Advanced: optional AlexWortega Qwen 4B bridge").click();
   await page.getByLabel("OpenJEV bridge URL").fill("http://127.0.0.1:1");
   await page.getByRole("button", { name: "Connect OpenJEV" }).click();
   await expect(page.getByRole("status")).toContainText("Connection failed");
@@ -79,8 +94,9 @@ test("real bridge response drives selected action and invalid scores stop execut
   await page.goto("/");
   await page
     .getByRole("button", { name: "Configure runtime", exact: true })
-    .first()
+    .last()
     .click();
+  await page.getByText("Advanced: optional AlexWortega Qwen 4B bridge").click();
   await page.getByRole("button", { name: "Connect OpenJEV" }).click();
   await expect(page.getByRole("status")).toContainText("Connected");
   await page.getByRole("button", { name: "Close dialog" }).click();
@@ -98,14 +114,14 @@ test("real bridge response drives selected action and invalid scores stop execut
 test("batch executes distinct seeds and records every episode", async ({
   page,
 }) => {
-  test.setTimeout(45000);
+  test.setTimeout(90000);
   await page.goto("/");
   await page.getByLabel("Playback speed").selectOption("2");
   await page.getByRole("button", { name: "Benchmarks", exact: true }).click();
   await page
     .getByRole("button", { name: "Run evaluation", exact: true })
     .click();
-  await expect(page.locator(".nav-count")).toHaveText("5", { timeout: 35000 });
+  await expect(page.locator(".nav-count")).toHaveText("5", { timeout: 80000 });
   await page.getByRole("button", { name: "Experiments" }).click();
   await expect(page.locator("tbody tr")).toHaveCount(5);
   const seeds = await page.locator("tbody .mono").allTextContents();
@@ -129,4 +145,32 @@ test("mobile layout fits and desktop screenshot", async ({ page }) => {
   await expect(
     page.getByRole("button", { name: "Pause episode" }),
   ).toBeVisible();
+});
+
+test("demo has no account UI, readable text and hidden visitor map", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByText("Personal workspace")).toHaveCount(0);
+  await expect(page.getByText("Local researcher")).toHaveCount(0);
+  await expect(page.locator(".visitor-widget")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+  const size = await page.locator(".visitor-widget").boundingBox();
+  expect(size!.width).toBe(1);
+  expect(size!.height).toBe(1);
+  const tooSmall = await page.locator("main").evaluate((root) =>
+    Array.from(root.querySelectorAll("*"))
+      .filter(
+        (e) =>
+          Array.from(e.childNodes).some(
+            (n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim(),
+          ) &&
+          e.getBoundingClientRect().width > 0 &&
+          parseFloat(getComputedStyle(e).fontSize) < 12,
+      )
+      .map((e) => e.className),
+  );
+  expect(tooSmall).toEqual([]);
 });

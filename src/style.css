@@ -102,7 +102,7 @@ button:hover:not(:disabled) {
 }
 .brand small {
   display: block;
-  font-size: 7px;
+  font-size: 12px;
   letter-spacing: 1.55px;
   font-weight: 500;
   margin-top: 6px;
@@ -141,7 +141,7 @@ button:hover:not(:disabled) {
   border: 1px solid #dde2d7;
   border-radius: 7px;
   background: #f7f8f4;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 550;
   margin-bottom: 28px;
 }
@@ -151,7 +151,7 @@ button:hover:not(:disabled) {
 }
 .workspace small {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   color: #8a9284;
   margin-top: 4px;
   font-weight: 400;
@@ -168,7 +168,7 @@ button:hover:not(:disabled) {
   font-size: 13px;
 }
 .nav-label {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 1.2px;
   color: #929989;
   padding: 0 12px;
@@ -209,7 +209,7 @@ button:hover:not(:disabled) {
 .nav-count {
   margin-left: auto;
   background: #e9ece4;
-  font-size: 10px;
+  font-size: 12px;
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -232,11 +232,11 @@ button:hover:not(:disabled) {
   margin-bottom: 11px;
 }
 .local-card strong {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 .local-card p {
-  font-size: 10px;
+  font-size: 12px;
   color: #808c77;
   line-height: 1.8;
   margin: 7px 0 12px;
@@ -245,7 +245,7 @@ button:hover:not(:disabled) {
   display: flex;
   gap: 16px;
   padding: 0;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: #576e47;
 }
@@ -258,7 +258,7 @@ button:hover:not(:disabled) {
   text-align: left;
   margin-top: 22px;
   padding: 20px 0;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 550;
 }
 .avatar {
@@ -273,7 +273,7 @@ button:hover:not(:disabled) {
 .user small {
   display: block;
   margin-top: 4px;
-  font-size: 9px;
+  font-size: 12px;
   color: #909787;
   font-weight: 400;
 }
@@ -299,7 +299,7 @@ button:hover:not(:disabled) {
   display: flex;
   align-items: center;
   gap: 13px;
-  font-size: 11px;
+  font-size: 12px;
   color: #a1a698;
 }
 .breadcrumb span {
@@ -309,7 +309,7 @@ button:hover:not(:disabled) {
   display: flex;
   align-items: center;
   gap: 23px;
-  font-size: 10px;
+  font-size: 12px;
   color: #7e8877;
 }
 .topbar-right a {
@@ -348,7 +348,7 @@ main {
 }
 .eyebrow {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 1.45px;
   color: #8d9884;
   font-weight: 500;
@@ -373,7 +373,7 @@ h1 {
   gap: 8px;
   border-radius: 5px;
   padding: 10px 14px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
   min-height: 35px;
@@ -392,7 +392,7 @@ h1 {
 .button.small {
   min-height: 29px;
   padding: 6px 10px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .config-strip {
   background: #fff;
@@ -431,7 +431,7 @@ h1 {
 .config-item label,
 .instruction label {
   display: block;
-  font-size: 8px;
+  font-size: 12px;
   color: #8a9383;
   letter-spacing: 1px;
   font-weight: 500;
@@ -440,7 +440,7 @@ h1 {
   display: block;
   border: 0;
   color: #475540;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   background: transparent;
   padding: 4px 19px 0 0;
@@ -450,7 +450,7 @@ h1 {
 }
 .config-item.engine span:not(.field-icon) {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   margin-top: 5px;
   color: #5c6954;
 }
@@ -503,7 +503,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -517,7 +517,7 @@ h1 {
 }
 .tag {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 7px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.35px;
   border: 1px solid #e5e9df;
@@ -537,7 +537,7 @@ h1 {
   gap: 9px;
 }
 .subtle {
-  font-size: 9px;
+  font-size: 12px;
   color: #97a08e;
 }
 .viewport {
@@ -577,7 +577,7 @@ h1 {
   background: #ffffffb0;
   border-radius: 4px;
   padding: 6px 9px;
-  font-size: 8px;
+  font-size: 12px;
   color: #727f68;
   backdrop-filter: blur(8px);
 }
@@ -592,14 +592,14 @@ h1 {
   font-family: "IBM Plex Mono", monospace;
 }
 .scene-label.mono {
-  font-size: 8px;
+  font-size: 12px;
 }
 .scene-note {
   position: absolute;
   left: 17px;
   bottom: 17px;
   color: #8a9680;
-  font-size: 8px;
+  font-size: 12px;
   pointer-events: none;
 }
 .scene-status {
@@ -611,7 +611,7 @@ h1 {
   background: #f2f7ecba;
   border-radius: 3px;
   font-family: "IBM Plex Mono", monospace;
-  font-size: 7px;
+  font-size: 12px;
   letter-spacing: 0.7px;
   padding: 5px 7px;
   margin-bottom: 8px;
@@ -637,7 +637,7 @@ h1 {
 }
 .segmented button {
   padding: 5px 10px;
-  font-size: 8px;
+  font-size: 12px;
   color: #8e9982;
   border-radius: 3px;
 }
@@ -660,7 +660,7 @@ h1 {
   right: 20px;
   width: 37px;
   height: 42px;
-  font-size: 8px;
+  font-size: 12px;
   font-family: monospace;
 }
 .axis:before,
@@ -721,7 +721,7 @@ h1 {
   color: #879878;
 }
 .instruction p {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 450;
   margin: 6px 0 0;
   color: #536047;
@@ -747,26 +747,26 @@ h1 {
   margin: 0 6px;
 }
 .speed-label {
-  font-size: 9px;
+  font-size: 12px;
   color: #97a18c;
 }
 .speed-label select {
   border: 0;
   background: none;
-  font-size: 10px;
+  font-size: 12px;
   color: #718262;
   padding: 0;
 }
 .step-count {
   font-family: "IBM Plex Mono", monospace;
   color: #9da68f;
-  font-size: 8px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 .step-count strong {
-  font-size: 11px;
+  font-size: 12px;
   color: #62734f;
   font-weight: 500;
 }
@@ -796,7 +796,7 @@ h1 {
   place-items: center;
 }
 .model-title strong {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   display: flex;
   gap: 6px;
@@ -804,14 +804,14 @@ h1 {
 }
 .model-title p {
   margin: 5px 0 0;
-  font-size: 8px;
+  font-size: 12px;
   color: #99a08f;
 }
 .tag.orange {
   color: #c5825e;
   border-color: #f1ddc9;
   background: #fff5e9;
-  font-size: 6px;
+  font-size: 12px;
 }
 .pipeline {
   display: flex;
@@ -820,7 +820,7 @@ h1 {
   background: #f6f8f1;
   border: 1px solid #e8edde;
   border-radius: 5px;
-  font-size: 8px;
+  font-size: 12px;
   color: #a0ab91;
   padding: 7px 11px;
   margin: 17px 0 21px;
@@ -836,14 +836,14 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 1px;
   color: #8c987e;
   font-weight: 500;
   margin-bottom: 9px;
 }
 .section-label > span {
-  font-size: 6px;
+  font-size: 12px;
   color: #a8b399;
   letter-spacing: 0.5px;
 }
@@ -869,7 +869,7 @@ h1 {
   bottom: 7px;
   left: 8px;
   font-family: "IBM Plex Mono", monospace;
-  font-size: 7px;
+  font-size: 12px;
   color: #6b7b5d;
   background: #f9fcf0b0;
   padding: 2px 4px;
@@ -879,7 +879,7 @@ h1 {
   position: absolute;
   top: 8px;
   right: 8px;
-  font-size: 6px;
+  font-size: 12px;
   color: #648451;
   display: flex;
   align-items: center;
@@ -903,7 +903,7 @@ h1 {
   align-items: center;
   gap: 5px;
   color: #9aa789;
-  font-size: 8px;
+  font-size: 12px;
   padding: 0;
   letter-spacing: 0;
 }
@@ -921,17 +921,17 @@ h1 {
   display: flex;
   gap: 9px;
   align-items: center;
-  font-size: 9px;
+  font-size: 12px;
   color: #768768;
 }
 .candidate-number {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 7px;
+  font-size: 12px;
   color: #a4b296;
 }
 .candidate-line strong {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 400;
   margin-left: auto;
   color: #8ca279;
@@ -966,7 +966,7 @@ h1 {
   margin: 15px -16px 0;
   padding: 12px 16px;
   border-top: 1px solid #e8edde;
-  font-size: 8px;
+  font-size: 12px;
   color: #98a98a;
 }
 .decision-foot > span {
@@ -976,7 +976,7 @@ h1 {
 }
 .decision-foot strong {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 400;
   color: #8a9f79;
 }
@@ -1007,7 +1007,7 @@ h1 {
 }
 .metric label {
   color: #939f85;
-  font-size: 9px;
+  font-size: 12px;
   display: block;
 }
 .metric strong {
@@ -1020,12 +1020,12 @@ h1 {
 }
 .metric strong small {
   font-family: "DM Sans", sans-serif;
-  font-size: 9px;
+  font-size: 12px;
   color: #a1ad93;
   margin-left: 7px;
 }
 .metric-caption {
-  font-size: 8px;
+  font-size: 12px;
   color: #a4af97;
   white-space: nowrap;
 }
@@ -1081,7 +1081,7 @@ h1 {
   margin: 2px 0 7px;
 }
 .next-card p {
-  font-size: 9px;
+  font-size: 12px;
   color: #9da98d;
   margin: 0;
   line-height: 1.7;
@@ -1091,7 +1091,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 15px;
-  font-size: 9px;
+  font-size: 12px;
   padding: 0;
   margin-top: 18px;
 }
@@ -1100,7 +1100,7 @@ h1 {
   align-items: center;
   gap: 15px;
   margin: 17px 0 24px;
-  font-size: 8px;
+  font-size: 12px;
   color: #a1ad95;
 }
 .honesty-note > span {
@@ -1112,13 +1112,13 @@ h1 {
 .honesty-note p {
   margin: 0;
   color: #a9b49e;
-  font-size: 8px;
+  font-size: 12px;
 }
 .honesty-note button {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 8px;
+  font-size: 12px;
   color: #9eab90;
   margin-left: auto;
   white-space: nowrap;
@@ -1128,7 +1128,7 @@ footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 12px;
   color: #a0ad92;
   padding: 19px 0;
 }
@@ -1180,10 +1180,10 @@ table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 11px;
+  font-size: 12px;
 }
 th {
-  font-size: 9px;
+  font-size: 12px;
   color: #91a17f;
   letter-spacing: 0.3px;
   background: #f8faf4;
@@ -1199,17 +1199,17 @@ td {
 }
 td strong {
   color: #5e7650;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 td small {
   display: block;
   margin-top: 5px;
-  font-size: 8px;
+  font-size: 12px;
   color: #a8b799;
 }
 .result-tag {
-  font-size: 9px;
+  font-size: 12px;
   border-radius: 4px;
   padding: 5px 7px;
   background: #faf0e7;
@@ -1236,7 +1236,7 @@ td small {
 }
 .table-note {
   padding: 8px 20px;
-  font-size: 9px;
+  font-size: 12px;
   color: #a2b293;
 }
 .benchmark-summary {
@@ -1249,7 +1249,7 @@ td small {
   padding: 22px;
 }
 .benchmark-summary label {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 1px;
   color: #99aa88;
 }
@@ -1339,7 +1339,7 @@ td small {
   color: #6c8554;
 }
 .benchmark-card p {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.8;
   color: #9cad8a;
   min-height: 40px;
@@ -1362,13 +1362,13 @@ td small {
   margin: 0 0 7px;
 }
 .batch-panel p {
-  font-size: 10px;
+  font-size: 12px;
   color: #9cae88;
   margin: 0;
   line-height: 1.7;
 }
 .batch-panel label {
-  font-size: 9px;
+  font-size: 12px;
   color: #92a67c;
 }
 .batch-panel input,
@@ -1394,12 +1394,12 @@ td small {
   font-weight: 500;
 }
 .benchmark-disclosure p {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.8;
   color: #a7b997;
 }
 .benchmark-disclosure .text-button {
-  font-size: 10px;
+  font-size: 12px;
   color: #8da273;
 }
 .modal-backdrop {
@@ -1469,7 +1469,7 @@ td small {
 }
 .runtime-option p,
 .docs p {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.8;
   color: #879a77;
 }
@@ -1480,7 +1480,7 @@ td small {
   border-radius: 4px;
   padding: 12px;
   font-family: "IBM Plex Mono", monospace;
-  font-size: 9px;
+  font-size: 12px;
   overflow: auto;
   color: #859471;
   white-space: nowrap;
@@ -1489,7 +1489,7 @@ td small {
 .input-label {
   display: block;
   color: #879872;
-  font-size: 10px;
+  font-size: 12px;
   margin-top: 14px;
 }
 .input-label input {
@@ -1509,7 +1509,7 @@ td small {
   margin-top: 14px;
 }
 .runtime-actions > span {
-  font-size: 9px;
+  font-size: 12px;
   color: #92a67e;
   overflow-wrap: anywhere;
 }
@@ -1526,14 +1526,14 @@ td small {
   margin-top: 24px;
 }
 .docs code {
-  font-size: 10px;
+  font-size: 12px;
   color: #8e986c;
   background: #f0f4e6;
   padding: 2px 4px;
   border-radius: 3px;
 }
 .docs-note {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.8;
   color: #a19565;
   background: #faf7e9;
@@ -1547,7 +1547,7 @@ td small {
   align-items: center;
   gap: 7px;
   color: #7f9b5f;
-  font-size: 11px;
+  font-size: 12px;
   margin-top: 12px;
 }
 .spin {
@@ -1638,7 +1638,7 @@ td small {
     padding: 17px 11px;
   }
   .instruction p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .metric {
     padding: 0 12px;
@@ -1647,16 +1647,16 @@ td small {
     padding: 20px 12px;
   }
   .metric-caption {
-    font-size: 7px;
+    font-size: 12px;
   }
   .metric strong small {
-    font-size: 8px;
+    font-size: 12px;
   }
   .honesty-note {
     gap: 10px;
   }
   .scene-note > div {
-    font-size: 7px;
+    font-size: 12px;
   }
   .camera-tools {
     left: 57%;
@@ -1666,10 +1666,10 @@ td small {
   }
   .workspace {
     padding: 10px 6px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .workspace small {
-    font-size: 8px;
+    font-size: 12px;
   }
   .benchmark-card-body {
     padding: 16px;
@@ -1696,10 +1696,10 @@ td small {
     gap: 8px;
   }
   .brand small {
-    font-size: 6px;
+    font-size: 12px;
   }
   .nav-item {
-    font-size: 11px;
+    font-size: 12px;
     padding-left: 9px;
     gap: 8px;
   }
@@ -1729,10 +1729,10 @@ td small {
   }
   .config-item select {
     max-width: 180px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .config-item.engine span:not(.field-icon) {
-    font-size: 10px;
+    font-size: 12px;
   }
   .field-icon {
     display: none;
@@ -1822,7 +1822,7 @@ td small {
     padding: 24px 17px 0;
   }
   .eyebrow {
-    font-size: 7px;
+    font-size: 12px;
     letter-spacing: 1px;
   }
   h1 {
@@ -1830,7 +1830,7 @@ td small {
     max-width: 280px;
   }
   .page-heading p {
-    font-size: 10px;
+    font-size: 12px;
     max-width: 320px;
   }
   .page-heading {
@@ -1851,10 +1851,10 @@ td small {
     padding-left: 8px;
   }
   .config-item label {
-    font-size: 7px;
+    font-size: 12px;
   }
   .config-item select {
-    font-size: 9px;
+    font-size: 12px;
     max-width: 145px;
   }
   .config-strip > .icon-button {
@@ -1877,10 +1877,10 @@ td small {
   }
   .instruction p {
     line-height: 1.6;
-    font-size: 10px;
+    font-size: 12px;
   }
   .instruction label {
-    font-size: 7px;
+    font-size: 12px;
   }
   .instruction-icon {
     width: 28px;
@@ -1891,14 +1891,14 @@ td small {
     padding: 10px;
   }
   .transport .button {
-    font-size: 10px;
+    font-size: 12px;
     padding: 8px 10px;
   }
   .speed-label {
     font-size: 0;
   }
   .step-count {
-    font-size: 7px;
+    font-size: 12px;
   }
   .step-count > span {
     display: none;
@@ -1941,7 +1941,7 @@ td small {
     margin-top: 16px;
   }
   .metric strong small {
-    font-size: 7px;
+    font-size: 12px;
     margin-left: 4px;
   }
   .honesty-note {
@@ -1963,7 +1963,7 @@ td small {
     top: 10px;
   }
   .scene-label {
-    font-size: 7px;
+    font-size: 12px;
     padding: 5px 6px;
   }
   .camera-tools {
@@ -1973,7 +1973,7 @@ td small {
     bottom: 13px;
   }
   .camera-tools .segmented button {
-    font-size: 7px;
+    font-size: 12px;
     padding: 5px 7px;
   }
   .axis {
@@ -1989,10 +1989,10 @@ td small {
     line-height: 1.5;
   }
   .scene-status {
-    font-size: 6px;
+    font-size: 12px;
   }
   .scene-label.mono {
-    font-size: 7px;
+    font-size: 12px;
   }
   .benchmark-summary {
     gap: 9px;
@@ -2001,7 +2001,7 @@ td small {
     padding: 13px 10px;
   }
   .benchmark-summary label {
-    font-size: 7px;
+    font-size: 12px;
     letter-spacing: 0.2px;
     line-height: 1.6;
     display: block;
@@ -2054,13 +2054,13 @@ td small {
     flex-wrap: wrap;
   }
   .runtime-option code {
-    font-size: 8px;
+    font-size: 12px;
   }
   .empty-state h2 {
     font-size: 18px;
   }
   .empty-state p {
-    font-size: 11px;
+    font-size: 12px;
   }
   .metric-caption {
     white-space: normal;
@@ -2068,10 +2068,10 @@ td small {
     display: block;
   }
   .telemetry .subtle {
-    font-size: 8px;
+    font-size: 12px;
   }
   footer {
-    font-size: 7px;
+    font-size: 12px;
     line-height: 1.5;
   }
 }
@@ -2090,7 +2090,7 @@ td small {
   letter-spacing: -1px;
 }
 .brand small {
-  font-size: 6px;
+  font-size: 12px;
   letter-spacing: 0.85px;
 }
 .visitor-widget {
@@ -2104,7 +2104,7 @@ td small {
     padding: 0;
   }
   .brand small {
-    font-size: 5px;
+    font-size: 12px;
     letter-spacing: 0.45px;
   }
   .brand .logo-mark {
@@ -2122,4 +2122,413 @@ td small {
   clip-path: inset(50%);
   pointer-events: none;
   margin: 0;
+}
+.browser-onboarding {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid #dfe7d3;
+  background: #eff4e8;
+  padding: 18px;
+  border-radius: 7px;
+  margin-bottom: 18px;
+}
+.onboarding-icon {
+  color: #809767;
+}
+.browser-onboarding > div {
+  flex: 1;
+}
+.browser-onboarding strong {
+  font-size: 13px;
+  font-weight: 550;
+  color: #546c42;
+}
+.browser-onboarding p {
+  font-size: 12px;
+  color: #839674;
+  line-height: 1.7;
+  margin: 5px 0 0;
+}
+.browser-onboarding .browser-progress {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  color: #b2804c;
+}
+.advanced-runtime {
+  font-size: 12px;
+  color: #899a77;
+}
+.advanced-runtime summary {
+  cursor: pointer;
+  padding: 12px 0;
+}
+.advanced-runtime .runtime-option {
+  margin-top: 5px;
+}
+.browser-onboarding .button {
+  font-size: 12px;
+}
+@media (max-width: 800px) {
+  .browser-onboarding {
+    flex-wrap: wrap;
+    padding: 15px;
+    gap: 10px;
+  }
+  .browser-onboarding > div {
+    min-width: 180px;
+  }
+  .browser-onboarding .button {
+    margin-left: 32px;
+  }
+  .browser-onboarding strong {
+    font-size: 12px;
+  }
+  .browser-onboarding p {
+    font-size: 12px;
+  }
+}
+
+/* Readable type and a decision-first hierarchy. */
+:root {
+  font-size: 14px;
+}
+.sidebar {
+  width: 248px;
+}
+.main-shell {
+  margin-left: 248px;
+}
+.brand {
+  font-size: 24px;
+}
+.brand small {
+  line-height: 1.4;
+  letter-spacing: 0.3px;
+  max-width: 150px;
+}
+.nav-item {
+  font-size: 14px;
+}
+.workspace {
+  font-size: 12px;
+}
+.button {
+  font-size: 13px;
+}
+.page-heading p {
+  font-size: 14px;
+}
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.8px;
+}
+.browser-onboarding strong {
+  font-size: 16px;
+}
+.browser-onboarding p {
+  font-size: 13px;
+}
+.browser-onboarding .button {
+  font-size: 13px;
+}
+.config-item select {
+  font-size: 13px;
+}
+.config-item.engine span:not(.field-icon) {
+  font-size: 13px;
+}
+.panel-title {
+  font-size: 14px;
+}
+.simulation-panel {
+  display: flex;
+  flex-direction: column;
+}
+.viewport {
+  flex: 1;
+  min-height: 440px;
+}
+.instruction p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.instruction label {
+  font-size: 12px;
+}
+.candidate-line {
+  font-size: 13px;
+}
+.candidate {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.decision-foot {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+.metric-grid {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+.metric:first-child strong {
+  color: #d46b3f;
+  font-size: 32px;
+}
+.metric-caption {
+  white-space: normal;
+  line-height: 1.6;
+}
+.next-card h3 {
+  font-size: 15px;
+  line-height: 1.5;
+}
+.next-card p {
+  font-size: 13px;
+}
+.honesty-note {
+  flex-wrap: wrap;
+  line-height: 1.6;
+}
+.honesty-note p {
+  font-size: 12px;
+}
+.runtime-option p,
+.docs p {
+  font-size: 14px;
+}
+.runtime-title h3 {
+  font-size: 15px;
+}
+.runtime-actions {
+  flex-wrap: wrap;
+}
+.model-title strong {
+  flex-wrap: wrap;
+  line-height: 1.5;
+}
+.model-title p {
+  line-height: 1.6;
+}
+.pipeline {
+  gap: 6px;
+}
+.pipeline-active {
+  padding: 5px 8px;
+}
+footer {
+  line-height: 1.6;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.metric label {
+  line-height: 1.5;
+}
+@media (max-width: 1180px) {
+  .sidebar {
+    width: 210px;
+  }
+  .main-shell {
+    margin-left: 210px;
+  }
+  .brand {
+    font-size: 20px;
+  }
+  .brand small {
+    font-size: 12px;
+    max-width: 130px;
+  }
+  .brand .logo-mark {
+    width: 24px;
+    height: 26px;
+  }
+  .config-item.engine {
+    display: none;
+  }
+  .config-item:nth-child(2) {
+    border: 0;
+  }
+  .bottom-grid {
+    grid-template-columns: 1fr;
+  }
+  .metric-grid {
+    padding: 22px;
+  }
+  .next-card {
+    padding: 20px;
+  }
+}
+@media (max-width: 1000px) {
+  .viewport {
+    flex: auto;
+    height: 440px;
+  }
+  .config-item.engine {
+    display: none;
+  }
+  .browser-onboarding {
+    flex-wrap: wrap;
+  }
+  .browser-onboarding .button {
+    margin-left: 36px;
+  }
+  .browser-onboarding > div {
+    min-width: 220px;
+  }
+}
+@media (max-width: 700px) {
+  .sidebar {
+    width: 60px;
+  }
+  .main-shell {
+    margin-left: 60px;
+  }
+  .brand > span:not(.logo-mark) {
+    display: none;
+  }
+  .nav-item {
+    font-size: 0;
+  }
+  .viewport {
+    min-height: 330px;
+    height: 330px;
+  }
+  .config-strip {
+    flex-wrap: wrap;
+    position: relative;
+    padding-right: 40px;
+  }
+  .config-item {
+    flex-basis: 100%;
+    padding: 0;
+    border: 0 !important;
+  }
+  .config-item select {
+    font-size: 13px;
+    max-width: 100%;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .config-item:nth-child(2) {
+    padding-top: 12px;
+    margin-top: 5px;
+    border-top: 1px solid var(--line) !important;
+  }
+  .config-strip > .icon-button {
+    position: absolute;
+    right: 12px;
+    top: 17px;
+  }
+  .scene-top .mono {
+    display: none;
+  }
+  .scene-label {
+    font-size: 12px;
+  }
+  .scene-note {
+    bottom: 55px;
+  }
+  .scene-note > div {
+    display: none;
+  }
+  .camera-tools {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: 12px;
+  }
+  .camera-tools .segmented button {
+    font-size: 12px;
+    padding: 5px 9px;
+  }
+  .scene-status {
+    font-size: 12px;
+  }
+  .axis {
+    bottom: 65px;
+  }
+  .transport {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .transport-left {
+    flex-wrap: wrap;
+  }
+  .transport .button {
+    font-size: 13px;
+  }
+  .step-count {
+    font-size: 12px;
+  }
+  .metric-grid {
+    padding: 20px 12px;
+  }
+  .metric {
+    padding: 0 10px;
+  }
+  .metric strong {
+    font-size: 23px;
+  }
+  .metric:first-child strong {
+    font-size: 26px;
+  }
+  .metric strong small {
+    display: block;
+    margin: 3px 0;
+  }
+  .metric .status-value {
+    font-size: 15px;
+  }
+  .page-heading p {
+    font-size: 14px;
+  }
+  .page-heading h1 {
+    font-size: 29px;
+  }
+  .eyebrow {
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .browser-onboarding > div {
+    min-width: 160px;
+  }
+  .browser-onboarding .button {
+    margin-left: 0;
+    white-space: normal;
+  }
+  .browser-onboarding strong {
+    font-size: 15px;
+  }
+  .browser-onboarding p {
+    font-size: 13px;
+  }
+  .onboarding-icon {
+    display: none;
+  }
+  .topbar-right {
+    gap: 8px;
+  }
+  footer > span {
+    flex-wrap: wrap;
+  }
+  .runtime-option code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .benchmark-summary {
+    grid-template-columns: 1fr;
+  }
+  .benchmark-summary label {
+    height: auto;
+  }
+  .benchmark-card p {
+    font-size: 14px;
+  }
+}
+.sidebar {
+  overflow-y: auto;
+}
+.sidebar-bottom {
+  padding-top: 24px;
 }

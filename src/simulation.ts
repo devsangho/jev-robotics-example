@@ -51,7 +51,10 @@ export const actionText: Record<Action, string> = {
   transfer: "Move the held object over the destination",
   release: "Open gripper to release the object",
 };
+let episodeId = 0;
 export type World = {
+  id: number;
+  settling: boolean;
   phase: number;
   step: number;
   object: [number, number, number];
@@ -65,10 +68,12 @@ export function initialWorld(seed: number): World {
   const x = -0.35 + Math.sin(seed * 17.3) * 0.12,
     z = 0.34 + Math.cos(seed * 9.1) * 0.1;
   return {
+    id: ++episodeId,
+    settling: false,
     phase: 0,
     step: 0,
-    object: [x, 0.87, z],
-    home: [x, 0.87, z],
+    object: [x, 0.875, z],
+    home: [x, 0.875, z],
     grip: [0.15, 1.4, 0.02],
     holding: false,
     success: false,
@@ -86,7 +91,7 @@ export function advance(w: World, a: Action, task: Task): World {
     n.phase++;
     if (a === "approach") n.grip = [w.object[0], 1.3, w.object[2]];
     if (a === "grasp") {
-      n.grip = [w.object[0], 1.08, w.object[2]];
+      n.grip = [w.object[0], 1.09, w.object[2]];
       n.holding = true;
     }
     if (a === "lift") {
@@ -98,15 +103,22 @@ export function advance(w: World, a: Action, task: Task): World {
       n.object = [task.target[0], 1.3, task.target[1]];
     }
     if (a === "release") {
-      n.object = [task.target[0], 0.89, task.target[1]];
       n.holding = false;
-      n.success = true;
+      n.settling = true;
     }
   }
   return n;
 }
 export function premise(w: World, t: Task) {
-  return `Task: ${t.instruction} Observed state: object at ${w.object.map((v) => v.toFixed(2))}; gripper at ${w.grip.map((v) => v.toFixed(2))}; holding object: ${w.holding}. Destination at ${t.target}. Completed stages: ${actions.slice(0, w.phase).join(", ") || "none"}. The next required manipulation stage is ${actions[w.phase] || "finished"}.`;
+  const observations = [
+    "The object rests on the table. The open gripper is away from the object.",
+    "The open gripper is directly above the target object. The object has not been grasped.",
+    "The gripper is closed around the target object, which is still at table height.",
+    "The gripper holds the lifted object above the table, away from the destination.",
+    "The gripper holds the object directly above the clear destination.",
+    "The object has been released and is settling under gravity.",
+  ];
+  return `Task: ${t.instruction} Observation: ${observations[w.phase]}. Object position: ${w.object.map((v) => v.toFixed(2))}. Gripper position: ${w.grip.map((v) => v.toFixed(2))}. Destination: ${t.target}.`;
 }
 export function demoScores(w: World): number[] {
   return actions.map((_, i) =>

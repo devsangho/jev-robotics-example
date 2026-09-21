@@ -2,11 +2,21 @@
 
 **English** | [한국어](README.ko.md)
 
-An independent robotics playground built with Three.js, React, TypeScript, and Vite. Explore candidate-action scoring with AlexWortega's OpenJEV, run an optional small model in your browser, and deploy the frontend to GitHub Pages. This project is not an official JEV, OpenJEV, or LIBERO service.
+An independent robotics playground built with Three.js, React, TypeScript, and Vite. Run Kotoba's Open-Jev DeBERTa typed-decision model entirely in your browser, and deploy the frontend to GitHub Pages. This project is not an official JEV, OpenJEV, or LIBERO service.
 
 **[Open the playground](https://devsangho.github.io/jev-robotics-example/)**
 
-## Quick start
+## Use it without a server
+
+1. [Open Playground](https://devsangho.github.io/jev-robotics-example/).
+2. Click **Load Open-Jev · 480 MB**. Weights download once and are cached by your browser.
+3. Watch candidate probabilities and measured decision latency as the robot takes actions.
+
+No Python, local server, or API key is required. The quantized model runs in a Web Worker on WebGPU, using WebGPU. This quantized model requires WebGPU; the scripted preview also works without it. The loading panel reports actual download progress and supports cancellation. The no-download scripted preview remains available.
+
+The browser model is **Kotoba's Open-Jev DeBERTa**, not AlexWortega's Qwen 4B. It scores all five choices in one forward pass without generating text. Robotics is outside its training domains; displayed probabilities are not a guarantee of successful robot control.
+
+## Developer quick start
 
 Requires Node.js 22 or newer.
 
@@ -21,19 +31,19 @@ Open http://localhost:5173. Use `npm run build` to create `dist/` and `npm run p
 
 | Feature | Implementation |
 | --- | --- |
-| Interactive 3D scene | Procedural robot arm, tabletop, objects, trajectory, and orbit/top/front camera controls |
+| Interactive 3D scene | Procedural arm and cameras, Rapier rigid-body contacts, gripper grasp constraint, visible release, and gravity |
 | Scripted policy | Five deterministic manipulation stages and demonstration scores; no trained model |
 | Local OpenJEV | The actual AlexWortega Qwen 4B NLI checkpoint, served through a local Python bridge |
-| Browser model | Optional WebLLM Qwen3 0.6B download and JSON action selection; **not the OpenJEV checkpoint** |
+| Browser model | Open-Jev DeBERTa q4, actual typed-decision probabilities via Transformers.js, WebGPU, no server |
 | Experiments | Three tasks, seeded initial positions, play/pause/single-step/reset, and repeated episodes |
 | History | Up to 50 episodes in localStorage, measured client round-trip latency, action scores, and JSON export |
 | Real LIBERO integration | A separate Python rollout client for MuJoCo and a user-provided VLA candidate endpoint |
 
-The browser scene is **LIBERO-inspired kinematic simulation**, not the official benchmark. It does not implement contact physics, faithful Franka joint kinematics, or a pretrained VLA. Demo completion rates are not benchmark scores.
+The browser scene is a **LIBERO-inspired physics playground**, not the official benchmark. Rapier simulates the object, table, bowl, and gripper contacts. Grasping uses a fixed joint, the fingers visibly open before release, and success requires the object to settle inside the target. The arm follows staged motion rather than faithful Franka joint dynamics or a pretrained VLA. Demo completion rates are not benchmark scores.
 
-Browser OpenJEV mode receives a text state that includes the known next manipulation stage; it is an integration demonstration, not a visual generalization evaluation. The scene-camera preview is not sent to the model. The original OpenJEV 4B checkpoint has not been converted to a browser runtime here.
+Browser model mode receives text observations from the simulator; it is an integration demonstration, not a visual generalization evaluation. The scene-camera preview is not sent to the model. The original OpenJEV 4B checkpoint has not been converted to a browser runtime here.
 
-Qwen browser-mode 0/100% indicators show the selected action, not calibrated probabilities. OpenJEV scores are independent candidate entailment probabilities and need not sum to one.
+Browser DeBERTa scores use a softmax over candidate logits at the source model’s temperature of 1.05. These probabilities sum to one but are not calibrated on robotics. The optional AlexWortega bridge returns independent NLI entailment probabilities, which need not sum to one.
 
 ## GitHub Pages
 
@@ -59,9 +69,9 @@ npm run preview
 # http://localhost:4173/jev-robotics-example/
 ```
 
-GitHub Pages serves the static frontend; it cannot run the Python model server. The demo and optional WebGPU model work on the hosted site. Actual OpenJEV runs on each user's machine. Connecting from HTTPS to loopback HTTP depends on browser local-network permissions and policies. If blocked, run the frontend locally or use a trusted local HTTPS proxy.
+GitHub Pages serves the static frontend; it cannot run the Python model server. The demo and actual Open-Jev DeBERTa model run on the hosted frontend, on the user’s own device. Only the optional AlexWortega Qwen bridge needs a separate process. Connecting from HTTPS to loopback HTTP depends on browser local-network permissions and policies. If blocked, run the frontend locally or use a trusted local HTTPS proxy.
 
-## Actual OpenJEV 4B inference
+## Optional developer bridge: AlexWortega OpenJEV 4B
 
 Python 3.11 or newer is recommended. The bridge automatically selects CUDA, Apple MPS, or CPU. Allow approximately 9 GB or more of disk space for model weights and sufficient memory for weights and inference buffers. CPU mode loads float32 weights and therefore needs more RAM.
 
@@ -103,11 +113,13 @@ CORS allows the local development origins and the configured Pages origin. An or
 
 The response contains `scores` in candidate order and `probabilities` as `[contradiction, entailment, neutral]` per candidate. Requests accept 1–16 candidates and truncate inputs to 2048 tokens. The browser demo uses five candidates.
 
-## Optional WebGPU model
+## Browser model implementation
 
-Select **Model runtime → Qwen3 0.6B → Load browser model** to explicitly start the download. WebLLM loads `Qwen3-0.6B-q4f16_1-MLC` and its runtime assets, then caches them in the browser. This is a general Qwen model, not OpenJEV.
+The browser downloads [`onnx-community/open-jev-deberta-v3-large-ONNX`](https://huggingface.co/onnx-community/open-jev-deberta-v3-large-ONNX), a Transformers.js-ready conversion of Kotoba's typed-decision model. The q4 graph and external data total approximately 478 MB, plus tokenizer and runtime assets.
 
-Use a WebGPU-capable browser and device. The load button is disabled when WebGPU is unavailable. Memory errors, failed downloads, and invalid model responses are surfaced as errors; the app does not silently substitute the scripted policy.
+`src/decision.worker.ts` constructs state/question/option span inputs, runs one forward pass, and applies the model's temperature-scaled softmax. Inputs stay on the device. The 512-token context limits the state to 256 tokens. No text decoding or synthetic scores are used in model mode.
+
+Model execution uses a worker so rendering and controls remain responsive. The ONNX WebAssembly bridge uses one thread because GitHub Pages cannot set COOP/COEP headers. Quantized GatherBlockQuantized operators require WebGPU and do not have a working CPU fallback in the tested runtime. Browser cache availability depends on storage settings; clearing browser data removes cached weights. Loading failures and invalid outputs are shown explicitly, without silently switching to the scripted policy.
 
 ## Real LIBERO + VLA integration
 
@@ -168,7 +180,7 @@ npm test
 python3 -m unittest discover -s server -p 'test_*.py'
 ```
 
-Playwright covers the WebGL canvas, episode completion/reset/history/export, repeated seeds, mobile layout, and bridge response/error handling. Bridge browser tests use HTTP fixtures, not actual model inference. Model inference and MuJoCo/VLA end-to-end execution require separate validation on a machine with the necessary weights and environments installed.
+Playwright covers the WebGL canvas, episode completion/reset/history/export, repeated seeds, mobile layout, and bridge response/error handling. Bridge browser tests use HTTP fixtures, not actual model inference. The optional `node scripts/browser-model-smoke.mjs` test downloads the real browser model and runs one decision against `npm run preview`. Model inference and MuJoCo/VLA end-to-end execution require separate validation on a machine with the necessary weights and environments installed.
 
 The requested MapMyVisitors script loads from an external service for tracking only; its visual widget is hidden. It is separate from local model inference; automated tests do not contribute to its visitor count.
 
@@ -177,4 +189,5 @@ The requested MapMyVisitors script loads from an external service for tracking o
 - [AlexWortega OpenJEV model and NLI interface](https://huggingface.co/AlexWortega/openjev)
 - [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO)
 - [OpenVLA LIBERO evaluation](https://github.com/openvla/openvla/blob/main/experiments/robot/libero/run_libero_eval.py)
-- [WebLLM](https://webllm.mlc.ai/docs/user/basic_usage.html)
+- [Browser Open-Jev model card and input contract](https://huggingface.co/onnx-community/open-jev-deberta-v3-large-ONNX)
+- [Transformers.js](https://github.com/huggingface/transformers.js)

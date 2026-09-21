@@ -8,17 +8,8 @@ import {
   type Decision,
 } from "./simulation";
 export type Mode = "demo" | "openjev" | "browser";
-let engine: import("@mlc-ai/web-llm").MLCEngineInterface | undefined;
-export async function loadBrowser(onProgress: (text: string) => void) {
-  if (!("gpu" in navigator))
-    throw new Error(
-      "WebGPU is unavailable. Use Chrome or Edge with hardware acceleration, or connect local OpenJEV.",
-    );
-  const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
-  engine = await CreateMLCEngine("Qwen3-0.6B-q4f16_1-MLC", {
-    initProgressCallback: (p) => onProgress(p.text),
-  });
-}
+import { scoreBrowser } from "./browserRuntime";
+export { loadBrowser, cancelBrowserLoad } from "./browserRuntime";
 export async function decide(
   mode: Mode,
   w: World,
@@ -51,33 +42,13 @@ export async function decide(
     scores = data.scores;
     source = data.model || "Local OpenJEV";
   } else {
-    if (!engine)
-      throw new Error("Load the browser model in Runtime settings first.");
-    const result = await engine.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content:
-            "You select the next robot manipulation stage. Return a JSON object with an action field from the allowed actions. /no_think",
-        },
-        {
-          role: "user",
-          content: `${premise(w, t)}\nAllowed actions: ${actions.join(", ")}. Return {"action":"..."}.`,
-        },
-      ],
-      temperature: 0,
-      max_tokens: 128,
-      response_format: { type: "json_object" },
-    });
-    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-    const parsed = JSON.parse(result.choices[0].message.content || "{}");
-    const index = actions.indexOf(parsed.action);
-    if (index < 0)
-      throw new Error(
-        "Browser model did not return a valid action. Try resetting the episode.",
-      );
-    scores = actions.map((_, i) => (i === index ? 1 : 0));
-    source = "Qwen3 0.6B · generated choice (not OpenJEV)";
+    const result = await scoreBrowser(
+      premise(w, t),
+      actions.map((a) => actionText[a]),
+      signal,
+    );
+    scores = result.scores!;
+    source = `Open-Jev DeBERTa · ${result.device} · on-device`;
   }
   if (
     !Array.isArray(scores) ||

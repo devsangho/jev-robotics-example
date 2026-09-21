@@ -10,7 +10,8 @@
     "test": "playwright test"
   },
   "dependencies": {
-    "@mlc-ai/web-llm": "^0.2.82",
+    "@dimforge/rapier3d-compat": "^0.20.0",
+    "@huggingface/transformers": "^4.3.0",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
