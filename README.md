@@ -1,6 +1,6 @@
-# JEV Lab
+# Playground
 
-Three.js 기반 로컬 우선 로보틱스 플레이그라운드. React + TypeScript + Vite로 만들었으며 GitHub Pages에서 정적 호스팅할 수 있습니다.
+JEV/OpenJEV의 공식 서비스가 아닌 독립적인 Three.js 기반 로보틱스 플레이그라운드. React + TypeScript + Vite로 만들었으며 GitHub Pages에서 정적 호스팅할 수 있습니다.
 
 ## 바로 실행
 
@@ -33,7 +33,7 @@ http://localhost:5173 에서 실행됩니다. `npm run build`로 `dist/`를 만�
 
 1. 저장소 **Settings → Pages → Build and deployment → Source**를 **GitHub Actions**로 선택합니다.
 2. 코드를 `main` 브랜치에 push합니다.
-3. **Actions → Deploy JEV Lab to GitHub Pages**의 성공을 확인합니다.
+3. **Actions → Deploy Playground to GitHub Pages**의 성공을 확인합니다.
 
 현재 remote 기준 예상 주소:
 
@@ -168,3 +168,5 @@ Playwright는 실제 WebGL canvas, 에피소드 실행·리셋·기록·export·
 - [WebLLM](https://webllm.mlc.ai/docs/user/basic_usage.html)
 
 독립 실험 프로젝트이며 JEV, OpenJEV 또는 LIBERO 공식 서비스가 아닙니다.
+
+방문자 지도: 사용자 지정 MapMyVisitors 스크립트를 페이지 하단에 포함합니다. 이 위젯은 외부 서비스에서 로드되며, 로컬 모델 추론과는 별개입니다.

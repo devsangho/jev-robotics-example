@@ -2083,3 +2083,32 @@ td small {
     animation: none;
   }
 }
+
+/* Independent project identity and requested visitor map. */
+.brand {
+  font-size: 23px;
+  letter-spacing: -1px;
+}
+.brand small {
+  font-size: 6px;
+  letter-spacing: 0.85px;
+}
+.visitor-widget {
+  width: min(280px, calc(100% - 100px));
+  margin: 8px auto 24px;
+}
+@media (max-width: 1180px) and (min-width: 701px) {
+  .brand {
+    font-size: 18px;
+    gap: 7px;
+    padding: 0;
+  }
+  .brand small {
+    font-size: 5px;
+    letter-spacing: 0.45px;
+  }
+  .brand .logo-mark {
+    width: 24px;
+    height: 26px;
+  }
+}

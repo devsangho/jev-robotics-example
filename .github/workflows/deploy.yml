@@ -1,4 +1,4 @@
-name: Deploy JEV Lab to GitHub Pages
+name: Deploy Playground to GitHub Pages
 on:
   push:
     branches: [main]

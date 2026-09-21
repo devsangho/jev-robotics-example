@@ -58,7 +58,7 @@ function download(data: unknown) {
   );
   const a = document.createElement("a");
   a.href = url;
-  a.download = `jev-lab-${Date.now()}.json`;
+  a.download = `robotics-playground-${Date.now()}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -257,8 +257,8 @@ export default function App() {
       });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = await r.json();
-      if (data.service !== "jev-lab")
-        throw new Error("This is not a JEV Lab bridge");
+      if (data.service !== "robotics-playground")
+        throw new Error("This is not a Playground bridge");
       if (!data.ready) throw new Error("OpenJEV model is not loaded");
       setConnection(`Connected · ${data.device}`);
       reset();
@@ -290,7 +290,7 @@ export default function App() {
     successes = history.filter((h) => h.success).length;
   const exportAll = () =>
     download({
-      schema: "jev-lab/v1",
+      schema: "robotics-playground/v1",
       environment: "kinematic-threejs-demo",
       officialLibero: false,
       records: history,
@@ -301,12 +301,12 @@ export default function App() {
         <a
           className="brand"
           href={import.meta.env.BASE_URL}
-          aria-label="JEV Lab home"
+          aria-label="Playground home"
         >
           <Logo />
           <span>
-            jev<span className="brand-light">lab</span>
-            <small>ROBOTICS PLAYGROUND</small>
+            playground
+            <small>INDEPENDENT ROBOTICS SANDBOX</small>
           </span>
         </a>
         <div className="workspace">
@@ -1109,8 +1109,8 @@ export default function App() {
           )}
           <footer>
             <span>
-              <Logo /> JEV Lab <span className="footer-divider">/</span> An open
-              playground for embodied AI.
+              <Logo /> Playground <span className="footer-divider">/</span> An
+              independent robotics experiment.
             </span>
             <span>
               Built for exploration.{" "}
@@ -1139,7 +1139,7 @@ export default function App() {
             <div className="modal-heading">
               <div>
                 <div className="eyebrow">
-                  JEV LAB / {modal === "runtime" ? "RUNTIME" : "GUIDE"}
+                  PLAYGROUND / {modal === "runtime" ? "RUNTIME" : "GUIDE"}
                 </div>
                 <h2>
                   {modal === "runtime"

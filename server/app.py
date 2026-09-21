@@ -40,7 +40,7 @@ async def lifespan(app):
     model = tokenizer = None
 
 
-app = FastAPI(title="JEV Lab local inference", lifespan=lifespan)
+app = FastAPI(title="Playground local inference", lifespan=lifespan)
 # Allow only local development and this project's deployed frontend by default.
 # Set JEV_ALLOWED_ORIGIN for your own fork's Pages URL (origin, without path).
 app.add_middleware(
@@ -69,7 +69,7 @@ class ScoreRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"service": "jev-lab", "ready": model is not None,
+    return {"service": "robotics-playground", "ready": model is not None,
             "model": f"{MODEL_ID}/{SUBFOLDER}", "device": device}
 
 

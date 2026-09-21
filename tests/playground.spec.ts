@@ -23,7 +23,7 @@ test("episode runs, pauses, completes and exports measured trace", async ({
     page.waitForEvent("download"),
     page.getByRole("button", { name: "Export JSON" }).click(),
   ]);
-  expect(download.suggestedFilename()).toMatch(/jev-lab-.*\.json/);
+  expect(download.suggestedFilename()).toMatch(/robotics-playground-.*\.json/);
   await page.reload();
   await page.getByRole("button", { name: "Experiments" }).click();
   await expect(page.locator("tbody tr")).toHaveCount(1);
@@ -60,7 +60,9 @@ test("real bridge response drives selected action and invalid scores stop execut
   page,
 }) => {
   await page.route("http://127.0.0.1:8000/health", (r) =>
-    r.fulfill({ json: { service: "jev-lab", ready: true, device: "test" } }),
+    r.fulfill({
+      json: { service: "robotics-playground", ready: true, device: "test" },
+    }),
   );
   await page.route("http://127.0.0.1:8000/score", (r) =>
     r.fulfill({
