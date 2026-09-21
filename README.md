@@ -170,7 +170,7 @@ python3 -m unittest discover -s server -p 'test_*.py'
 
 Playwright covers the WebGL canvas, episode completion/reset/history/export, repeated seeds, mobile layout, and bridge response/error handling. Bridge browser tests use HTTP fixtures, not actual model inference. Model inference and MuJoCo/VLA end-to-end execution require separate validation on a machine with the necessary weights and environments installed.
 
-The requested MapMyVisitors widget is embedded at the bottom of the page and loads from an external service. It is separate from local model inference; automated tests do not contribute to its visitor count.
+The requested MapMyVisitors script loads from an external service for tracking only; its visual widget is hidden. It is separate from local model inference; automated tests do not contribute to its visitor count.
 
 ## References
 

@@ -2112,3 +2112,14 @@ td small {
     height: 26px;
   }
 }
+
+/* Keep the requested visitor tracker active without showing its map. */
+.visitor-widget {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  pointer-events: none;
+  margin: 0;
+}
