@@ -59,7 +59,8 @@ export default function Scene({
       /SwiftShader|llvmpipe|Software/i.test(
         gl.getParameter(rendererInfo.UNMASKED_RENDERER_WEBGL),
       );
-    renderer.shadowMap.enabled = true;
+    if (softwareRenderer) renderer.setPixelRatio(0.75);
+    renderer.shadowMap.enabled = !softwareRenderer;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setClearColor("#ebeeec");
     renderer.outputColorSpace = THREE.SRGBColorSpace;

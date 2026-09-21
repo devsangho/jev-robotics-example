@@ -22,6 +22,11 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-results
+          path: test-results
       - run: python3 -m unittest discover -s server -p 'test_*.py'
       - run: npm run build
         env:
