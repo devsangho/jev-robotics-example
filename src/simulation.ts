@@ -55,6 +55,9 @@ let episodeId = 0;
 export type World = {
   id: number;
   settling: boolean;
+  obstacle?: [number, number];
+  blocked?: string;
+  changes?: string[];
   phase: number;
   step: number;
   object: [number, number, number];
@@ -84,9 +87,17 @@ export function advance(w: World, a: Action, task: Task): World {
   const n: World = {
     ...w,
     step: w.step + 1,
+    blocked: undefined,
     grip: [...w.grip],
     object: [...w.object],
   };
+  if (a === "transfer" && w.phase === 3 && transferBlocked(w, task)) {
+    return {
+      ...n,
+      blocked:
+        "Transfer path blocked. Move the destination or remove the obstacle; this staged controller has no avoidance action.",
+    };
+  }
   if (a === actions[w.phase]) {
     n.phase++;
     if (a === "approach") n.grip = [w.object[0], 1.3, w.object[2]];
@@ -109,16 +120,33 @@ export function advance(w: World, a: Action, task: Task): World {
   }
   return n;
 }
+export function transferBlocked(w: World, t: Task) {
+  if (!w.obstacle) return false;
+  const [x, z] = w.obstacle;
+  const dx = t.target[0] - w.grip[0],
+    dz = t.target[1] - w.grip[2];
+  const length = dx * dx + dz * dz;
+  const u = length
+    ? Math.max(
+        0,
+        Math.min(1, ((x - w.grip[0]) * dx + (z - w.grip[2]) * dz) / length),
+      )
+    : 0;
+  return Math.hypot(x - w.grip[0] - u * dx, z - w.grip[2] - u * dz) < 0.22;
+}
+export function freshWorld(w: World): World {
+  return { ...structuredClone(w), id: initialWorld(w.seed).id };
+}
 export function premise(w: World, t: Task) {
   const observations = [
     "The object rests on the table. The open gripper is away from the object.",
     "The open gripper is directly above the target object. The object has not been grasped.",
     "The gripper is closed around the target object, which is still at table height.",
     "The gripper holds the lifted object above the table, away from the destination.",
-    "The gripper holds the object directly above the clear destination.",
+    "The gripper holds the object directly above the destination.",
     "The object has been released and is settling under gravity.",
   ];
-  return `Task: ${t.instruction} Observation: ${observations[w.phase]}. Object position: ${w.object.map((v) => v.toFixed(2))}. Gripper position: ${w.grip.map((v) => v.toFixed(2))}. Destination: ${t.target}.`;
+  return `Task: ${t.instruction} Observation: ${observations[w.phase]}. Object position: ${w.object.map((v) => v.toFixed(2))}. Gripper position: ${w.grip.map((v) => v.toFixed(2))}. Destination: ${t.target}. ${w.obstacle ? `Obstacle at ${w.obstacle}, height 0.60 m above the table. ${transferBlocked(w, t) ? "The straight transfer path is obstructed." : "The straight transfer path is clear."}` : "No added obstacle."}${w.blocked ? ` Last action: ${w.blocked}` : ""}`;
 }
 export function demoScores(w: World): number[] {
   return actions.map((_, i) =>
@@ -130,6 +158,9 @@ export type Decision = {
   scores: number[];
   latency: number;
   source: string;
+  observation?: string;
+  world?: World;
+  task?: Task;
 };
 export type RunRecord = {
   id: string;
@@ -141,4 +172,8 @@ export type RunRecord = {
   latency: number;
   date: string;
   decisions: Decision[];
+  comparisonId?: string;
+  comparisonRole?: "baseline" | "model";
+  taskConfig?: Task;
+  initial?: World;
 };

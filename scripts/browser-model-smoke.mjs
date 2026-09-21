@@ -45,6 +45,44 @@ try {
       await page.locator(".candidate.chosen").textContent(),
       await page.locator(".decision-foot").textContent(),
     );
+    if (process.env.SMOKE_EXPERIMENTS === "1") {
+      await page.getByLabel("Speed samples").selectOption("5");
+      await page
+        .getByRole("button", { name: "Measure decision speed" })
+        .click();
+      await page
+        .getByText("Measurement complete.", { exact: true })
+        .waitFor({ timeout: 180000 });
+      console.log(
+        "REAL SPEED",
+        await page.locator(".speed-result").innerText(),
+      );
+      await page.getByLabel("Playback speed").selectOption("2");
+      await page.getByRole("button", { name: "Run A/B comparison" }).click();
+      await page
+        .getByText("A/B comparison complete.", { exact: false })
+        .waitFor({ timeout: 180000 });
+      const pair = await page.evaluate(() =>
+        JSON.parse(localStorage.getItem("jev-runs") || "[]").slice(0, 2),
+      );
+      if (
+        pair.length !== 2 ||
+        !pair[0].comparisonId ||
+        pair[0].comparisonId !== pair[1].comparisonId ||
+        pair[0].decisions[0].observation !== pair[1].decisions[0].observation
+      ) {
+        throw new Error(
+          "A/B runs did not share an identical starting observation.",
+        );
+      }
+      console.log(
+        "REAL COMPARISON",
+        await page
+          .getByRole("region", { name: "A/B comparison" })
+          .locator("tbody")
+          .innerText(),
+      );
+    }
     await page.screenshot({
       path: "test-results/real-model.png",
       fullPage: true,

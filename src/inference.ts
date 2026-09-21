@@ -65,5 +65,8 @@ export async function decide(
     scores,
     latency: performance.now() - start,
     source,
+    observation: premise(w, t),
+    world: structuredClone(w),
+    task: structuredClone(t),
   };
 }

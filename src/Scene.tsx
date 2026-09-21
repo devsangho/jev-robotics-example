@@ -7,19 +7,30 @@ import { createPhysics, type RobotPhysics } from "./physics";
 export default function Scene({
   world,
   task,
+  preview = false,
   cameraView,
   resetCamera,
   onFrame,
   onMotionComplete,
   onSettled,
 }: {
+  preview?: boolean;
   world: World;
   task: Task;
   cameraView: string;
   resetCamera: number;
   onFrame?: (url: string) => void;
-  onMotionComplete: (position: [number, number, number]) => void;
-  onSettled: (success: boolean, position: [number, number, number]) => void;
+  onMotionComplete: (
+    position: [number, number, number],
+    episodeId: number,
+    step: number,
+  ) => void;
+  onSettled: (
+    success: boolean,
+    position: [number, number, number],
+    episodeId: number,
+    step: number,
+  ) => void;
 }) {
   const mount = useRef<HTMLDivElement>(null),
     latest = useRef({ world, task }),
@@ -218,6 +229,11 @@ export default function Scene({
       mat("#73919a"),
       [0.57, 0.89, -0.46],
     );
+    const obstacle = mesh(
+      new THREE.BoxGeometry(0.2, 0.6, 0.2),
+      mat("#bf7252"),
+      [0.18, 1.1075, 0.32],
+    );
     const bowl = new THREE.Group();
     scene.add(bowl);
     bowl.position.set(0.58, 0.815, 0.28);
@@ -306,10 +322,11 @@ export default function Scene({
       const delta = Math.min((time - lastTime) / 1000 || 1 / 60, 0.25);
       lastTime = time;
       const goal = new THREE.Vector3(...w.grip);
-      if (physics) {
+      if (physics && !preview) {
         if (lastEpisode !== w.id) {
           setError("");
           physics.reset(w, t);
+          sun.shadow.needsUpdate = true;
           lastEpisode = w.id;
           tip.copy(goal);
           aperture = 0.12;
@@ -349,11 +366,12 @@ export default function Scene({
           if (motionSeconds > 8 && !reportedSettlement) {
             reportedSettlement = true;
             setError("Motion could not finish. Reset the episode to retry.");
-            callbacks.current.onSettled(false, [
-              cube.position.x,
-              cube.position.y,
-              cube.position.z,
-            ]);
+            callbacks.current.onSettled(
+              false,
+              [cube.position.x, cube.position.y, cube.position.z],
+              w.id,
+              w.step,
+            );
           }
         }
         const atTarget = tip.distanceTo(goal) < 0.006;
@@ -362,11 +380,11 @@ export default function Scene({
           : !physics.holding && aperture > 0.118;
         if (atTarget && handReady && motionKey !== key && !w.settling) {
           motionKey = key;
-          callbacks.current.onMotionComplete([
-            cube.position.x,
-            cube.position.y,
-            cube.position.z,
-          ]);
+          callbacks.current.onMotionComplete(
+            [cube.position.x, cube.position.y, cube.position.z],
+            w.id,
+            w.step,
+          );
         }
         if (w.settling && !physics.holding) {
           releaseFor += delta;
@@ -380,14 +398,30 @@ export default function Scene({
               ) < 0.13 &&
               cube.position.y > 0.83 &&
               cube.position.y < 1.02;
-            callbacks.current.onSettled(onTarget && settledFor > 0.45, [
-              cube.position.x,
-              cube.position.y,
-              cube.position.z,
-            ]);
+            callbacks.current.onSettled(
+              onTarget && settledFor > 0.45,
+              [cube.position.x, cube.position.y, cube.position.z],
+              w.id,
+              w.step,
+            );
           }
         }
       }
+      if (preview) {
+        tip.copy(goal);
+        cube.position.set(...w.object);
+        aperture = w.holding ? 0.077 : 0.12;
+      }
+      obstacle.visible = !!w.obstacle;
+      if (w.obstacle)
+        obstacle.position.set(w.obstacle[0], 1.1075, w.obstacle[1]);
+      bowl.position.set(
+        t.suite === "Goal" ? 0.58 : t.target[0],
+        0.815,
+        t.suite === "Goal" ? 0.28 : t.target[1],
+      );
+      tray.position.x = t.target[0];
+      tray.position.z = t.target[1];
       (cube.material as THREE.MeshStandardMaterial).color.set(t.color);
       const shoulder = new THREE.Vector3(base.x, 1.18, base.z);
       const elbow = new THREE.Vector3(-1.05, 1.85, 0.15);
@@ -414,7 +448,7 @@ export default function Scene({
       ring.position.x = t.target[0];
       ring.position.z = t.target[1];
       tray.visible = t.suite === "Goal";
-      const pathKey = `${w.seed}:${t.id}`;
+      const pathKey = `${w.id}:${t.id}:${t.target}`;
       if (lastPath !== pathKey) {
         lastPath = pathKey;
         const curve = new THREE.CatmullRomCurve3([

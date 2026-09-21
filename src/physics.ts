@@ -26,12 +26,24 @@ export async function createPhysics(
     fixed(RAPIER.ColliderDesc.cuboid(10, 0.025, 10), 0, -0.055, 0);
     fixed(
       RAPIER.ColliderDesc.trimesh(bowlVertices, bowlIndices),
-      0.58,
+      task.suite === "Goal" ? 0.58 : task.target[0],
       0.815,
-      0.28,
+      task.suite === "Goal" ? 0.28 : task.target[1],
     );
     if (task.suite === "Goal")
-      fixed(RAPIER.ColliderDesc.cylinder(0.009, 0.21), 0.65, 0.824, -0.24);
+      fixed(
+        RAPIER.ColliderDesc.cylinder(0.009, 0.21),
+        task.target[0],
+        0.824,
+        task.target[1],
+      );
+    if (state.obstacle)
+      fixed(
+        RAPIER.ColliderDesc.cuboid(0.1, 0.3, 0.1),
+        state.obstacle[0],
+        1.1075,
+        state.obstacle[1],
+      );
     fixed(RAPIER.ColliderDesc.cuboid(0.055, 0.055, 0.055), 0.08, 0.87, -0.22);
     fixed(RAPIER.ColliderDesc.cylinder(0.08, 0.055), 0.57, 0.89, -0.46);
     cube = physics.createRigidBody(

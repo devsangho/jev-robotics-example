@@ -1,6 +1,16 @@
 let worker: Worker | undefined;
 let nextId = 0;
-type Result = { device: string; repository: string; scores?: number[] };
+type Result = {
+  device: string;
+  repository: string;
+  scores?: number[];
+  timing?: {
+    totalMs: number;
+    assetMs: number;
+    prepareMs: number;
+    reused: boolean;
+  };
+};
 const pending = new Map<
   number,
   {

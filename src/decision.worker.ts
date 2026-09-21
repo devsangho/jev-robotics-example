@@ -25,6 +25,9 @@ async function processRequest(data: {
   const progress = (text: string) => self.postMessage({ id, progress: text });
   try {
     if (type === "load") {
+      const started = performance.now();
+      let assetsReady = started;
+      const reused = !!model;
       if (!model) {
         const gpu = (
           self.navigator as Navigator & {
@@ -46,17 +49,34 @@ async function processRequest(data: {
               progress(
                 `Downloading ${p.file || "model"} · ${Math.round(p.progress || 0)}%`,
               );
-            else if (p.status === "done") progress("Preparing model weights…");
+            else if (p.status === "done") {
+              assetsReady = performance.now();
+              progress("Preparing model weights…");
+            }
           },
         };
         tokenizer = await AutoTokenizer.from_pretrained(repository, options);
+        assetsReady = performance.now();
         model = await AutoModel.from_pretrained(repository, {
           ...options,
           dtype: "q4",
           device: "webgpu",
         });
       }
-      self.postMessage({ id, result: { device, repository } });
+      const finished = performance.now();
+      self.postMessage({
+        id,
+        result: {
+          device,
+          repository,
+          timing: {
+            totalMs: finished - started,
+            assetMs: assetsReady - started,
+            prepareMs: finished - assetsReady,
+            reused,
+          },
+        },
+      });
       return;
     }
     if (!model || !tokenizer)

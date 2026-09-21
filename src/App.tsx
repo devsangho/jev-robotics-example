@@ -32,12 +32,30 @@ import {
   actions,
   advance,
   initialWorld,
+  freshWorld,
+  type Task,
   tasks,
   type Decision,
   type RunRecord,
   type World,
 } from "./simulation";
 import { decide, loadBrowser, cancelBrowserLoad, type Mode } from "./inference";
+
+import {
+  Timeline,
+  EnvironmentEditor,
+  ComparisonPanel,
+  SpeedPanel,
+  type LoadTiming,
+} from "./ExperimentTools";
+
+type Comparison = {
+  id: string;
+  stage: "baseline" | "model";
+  initial: World;
+  task: Task;
+  model: Mode;
+};
 
 function download(data: unknown) {
   const url = URL.createObjectURL(
@@ -78,8 +96,8 @@ export default function App() {
   const [seed, setSeed] = useState(42),
     [world, setWorld] = useState<World>(() => initialWorld(42)),
     [running, setRunning] = useState(false),
-    [sceneReady, setSceneReady] = useState(false),
-    [busy, setBusy] = useState(false),
+    [readyMotion, setReadyMotion] = useState<string | null>(null),
+    [inferenceBusy, setBusy] = useState(false),
     [decision, setDecision] = useState<Decision | null>(null),
     [decisions, setDecisions] = useState<Decision[]>([]);
   const [history, setHistory] = useState<RunRecord[]>(readHistory),
@@ -99,7 +117,25 @@ export default function App() {
     [batchRemaining, setBatchRemaining] = useState(0),
     [batchSize, setBatchSize] = useState("5"),
     [gpu, setGpu] = useState(false);
-  const task = tasks.find((t) => t.id === taskId)!;
+  const [targetOverride, setTargetOverride] = useState<[number, number] | null>(
+    null,
+  );
+  const [comparison, setComparison] = useState<Comparison | null>(null);
+  const [comparisonModel, setComparisonModel] = useState<Mode>("browser");
+  const [comparisonStatus, setComparisonStatus] = useState("");
+  const [measuring, setMeasuring] = useState(false);
+  const [loadTiming, setLoadTiming] = useState<LoadTiming | null>(null);
+  const [inspectedRun, setInspectedRun] = useState<string | null>(null);
+  const baseTask = tasks.find((t) => t.id === taskId)!;
+  const task = targetOverride
+    ? { ...baseTask, target: targetOverride }
+    : baseTask;
+  const busy = inferenceBusy || measuring;
+  const sceneReady = readyMotion === `${world.id}:${world.step}`;
+  const comparisonReady =
+    comparisonModel === "browser"
+      ? browserReady
+      : connection.startsWith("Connected");
   const controller = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const stepLock = useRef(false);
@@ -161,17 +197,23 @@ export default function App() {
     setRunning(false);
     setBusy(false);
     stepLock.current = false;
-    setSceneReady(false);
+    setReadyMotion(null);
     setWorld(initialWorld(nextSeed));
     setDecision(null);
     setDecisions([]);
     setError("");
     saved.current = false;
     setBatchRemaining(0);
+    setComparison(null);
+    if (comparison)
+      setComparisonStatus(
+        "Comparison cancelled; completed runs remain in history.",
+      );
   }
   function switchTask(id: string) {
     reset();
     setTaskId(id);
+    setTargetOverride(null);
   }
   async function step() {
     if (
@@ -190,13 +232,19 @@ export default function App() {
     try {
       const d = await decide(mode, world, task, endpoint, abort.signal);
       if (g !== generation.current) return;
-      setSceneReady(false);
+      setReadyMotion(null);
       setDecision(d);
       setDecisions((ds) => [...ds, d]);
       setWorld((w) => advance(w, d.action, task));
     } catch (e) {
       if (g === generation.current) {
         setError(e instanceof Error ? e.message : String(e));
+        if (comparison) {
+          setComparisonStatus(
+            "Comparison stopped: model error. Completed runs remain in history.",
+          );
+          setComparison(null);
+        }
         setRunning(false);
         setBatchRemaining(0);
       }
@@ -236,8 +284,30 @@ export default function App() {
           Math.max(decisions.length, 1),
         date: new Date().toISOString(),
         decisions,
+        taskConfig: structuredClone(task),
+        initial: decisions[0]?.world,
+        ...(comparison
+          ? { comparisonId: comparison.id, comparisonRole: comparison.stage }
+          : {}),
       };
       setHistory((h) => [record, ...h].slice(0, 50));
+      if (comparison?.stage === "baseline") {
+        const next = { ...comparison, stage: "model" as const };
+        reset(comparison.initial.seed);
+        setWorld(freshWorld(comparison.initial));
+        setTargetOverride([...comparison.task.target]);
+        setComparison(next);
+        setComparisonStatus(
+          "A/B: model episode running after completed baseline.",
+        );
+        setMode(comparison.model);
+        setRunning(true);
+      } else if (comparison?.stage === "model") {
+        setComparison(null);
+        setComparisonStatus(
+          "A/B comparison complete. Both runs are saved below and in Experiments.",
+        );
+      }
     }
   }, [world.success, world.step, batchRemaining]);
   useEffect(() => {
@@ -292,6 +362,7 @@ export default function App() {
     try {
       const runtime = await loadBrowser(setProgress);
       setBrowserDevice(runtime.device);
+      if (runtime.timing) setLoadTiming(runtime.timing);
       setBrowserReady(true);
       reset();
       setMode("browser");
@@ -305,11 +376,72 @@ export default function App() {
       setLoading(false);
     }
   }
+  function startComparison() {
+    const initial = {
+      ...initialWorld(seed),
+      object: [...world.home] as World["object"],
+      home: [...world.home] as World["home"],
+      obstacle: world.obstacle
+        ? ([...world.obstacle] as [number, number])
+        : undefined,
+    };
+    const run: Comparison = {
+      id: crypto.randomUUID(),
+      stage: "baseline",
+      initial: structuredClone(initial),
+      task: structuredClone(task),
+      model: comparisonModel,
+    };
+    reset();
+    setWorld(initial);
+    setMode("demo");
+    setComparison(run);
+    setComparisonStatus(
+      "A/B: scripted baseline running. Model will use the same starting layout.",
+    );
+    setRunning(true);
+  }
+  function editEnvironment(kind: "object" | "target" | "obstacle") {
+    if (
+      busy ||
+      !sceneReady ||
+      world.settling ||
+      world.success ||
+      world.step >= 20 ||
+      comparison
+    )
+      return;
+    setRunning(false);
+    setBatchRemaining(0);
+    setReadyMotion(null);
+    const next = freshWorld(world);
+    next.blocked = undefined;
+    let description = "";
+    if (kind === "object") {
+      if (world.holding) return;
+      const x = world.object[0] < -0.45 ? -0.28 : -0.62;
+      next.object = [x, 0.875, 0.42];
+      next.home = [...next.object];
+      next.phase = 0;
+      description = `Step ${world.step}: object moved to ${next.object.join(", ")}`;
+    } else if (kind === "target") {
+      const target: [number, number] =
+        task.target[0] > 0.8 ? [...baseTask.target] : [0.94, 0.3];
+      setTargetOverride(target);
+      if (next.holding && next.phase === 4) next.phase = 3;
+      description = `Step ${world.step}: destination moved to ${target.join(", ")}`;
+    } else {
+      next.obstacle = world.obstacle ? undefined : [0.18, 0.32];
+      description = `Step ${world.step}: obstacle ${next.obstacle ? "added at 0.18, 0.32" : "removed"}`;
+    }
+    next.changes = [...(world.changes || []), description];
+    setWorld(next);
+  }
   const completed = history.length,
     successes = history.filter((h) => h.success).length;
   const exportAll = () =>
     download({
-      schema: "robotics-playground/v1",
+      schema: "robotics-playground/v2",
       environment: "rapier-threejs-playground",
       officialLibero: false,
       records: history,
@@ -330,6 +462,10 @@ export default function App() {
               onClick={() => {
                 setRunning(false);
                 setBatchRemaining(0);
+                if (comparison) {
+                  setComparison(null);
+                  setComparisonStatus("Comparison cancelled by navigation.");
+                }
                 setTab(name);
               }}
             >
@@ -436,7 +572,7 @@ export default function App() {
                 ) : (
                   <button
                     className="button primary"
-                    disabled={running || busy || !gpu}
+                    disabled={running || busy || !!comparison || !gpu}
                     onClick={() => {
                       if (browserReady) {
                         reset();
@@ -469,7 +605,7 @@ export default function App() {
                       aria-label="Environment task"
                       value={taskId}
                       onChange={(e) => switchTask(e.target.value)}
-                      disabled={running || busy}
+                      disabled={running || busy || !!comparison}
                     >
                       {tasks.map((t) => (
                         <option key={t.id} value={t.id}>
@@ -500,7 +636,7 @@ export default function App() {
                         reset();
                         setMode(e.target.value as Mode);
                       }}
-                      disabled={running || busy}
+                      disabled={running || busy || !!comparison}
                     >
                       <option value="demo">Scripted candidate policy</option>
                       <option value="openjev">OpenJEV · Qwen 4B</option>
@@ -572,19 +708,27 @@ export default function App() {
                       cameraView={view}
                       resetCamera={cameraReset}
                       onFrame={setFrame}
-                      onMotionComplete={(position) => {
-                        setSceneReady(true);
-                        setWorld((w) => ({ ...w, object: position }));
+                      onMotionComplete={(position, episodeId, step) => {
+                        setReadyMotion(`${episodeId}:${step}`);
+                        setWorld((w) =>
+                          w.id === episodeId && w.step === step
+                            ? { ...w, object: position }
+                            : w,
+                        );
                       }}
-                      onSettled={(success, position) => {
-                        setWorld((w) => ({
-                          ...w,
-                          object: position,
-                          settling: false,
-                          success,
-                          step: success ? w.step : 20,
-                        }));
-                        setSceneReady(true);
+                      onSettled={(success, position, episodeId, step) => {
+                        setReadyMotion(`${episodeId}:${success ? step : 20}`);
+                        setWorld((w) =>
+                          w.id === episodeId && w.step === step
+                            ? {
+                                ...w,
+                                object: position,
+                                settling: false,
+                                success,
+                                step: success ? w.step : 20,
+                              }
+                            : w,
+                        );
                       }}
                     />
                     <div className="scene-top">
@@ -865,6 +1009,18 @@ export default function App() {
                   </button>
                 </div>
               )}
+              <EnvironmentEditor
+                world={world}
+                disabled={
+                  busy ||
+                  !sceneReady ||
+                  world.settling ||
+                  world.success ||
+                  world.step >= 20 ||
+                  !!comparison
+                }
+                onEdit={editEnvironment}
+              />
               <div className="bottom-grid">
                 <section className="telemetry panel">
                   <div className="panel-heading">
@@ -931,6 +1087,37 @@ export default function App() {
                   </div>
                 </section>
               </div>
+              <Timeline
+                decisions={decisions}
+                label={`Current episode · seed ${seed}`}
+              />
+              <ComparisonPanel
+                history={history}
+                active={!!comparison}
+                status={comparisonStatus}
+                disabled={running || busy || loading || !sceneReady}
+                modelReady={comparisonReady}
+                model={comparisonModel}
+                onModel={setComparisonModel}
+                onStart={startComparison}
+                onCancel={() => reset()}
+              />
+              <SpeedPanel
+                mode={mode}
+                world={world}
+                task={task}
+                endpoint={endpoint}
+                disabled={
+                  running ||
+                  busy ||
+                  loading ||
+                  !sceneReady ||
+                  world.settling ||
+                  !!comparison
+                }
+                loadTiming={loadTiming}
+                onBusy={setMeasuring}
+              />
               <div className="honesty-note">
                 <p>
                   LIBERO-inspired scene · {modeNames[mode]} · not an official
@@ -942,93 +1129,110 @@ export default function App() {
               </div>
             </>
           ) : tab === "Experiments" ? (
-            <section className="panel records-panel">
-              <div className="panel-heading">
-                <div className="panel-title">
-                  Episode history{" "}
-                  <span className="tag">{history.length} RUNS</span>
-                </div>
-                <button
-                  className="button light small"
-                  disabled={!history.length}
-                  onClick={exportAll}
-                >
-                  <ArrowDownToLine size={14} />
-                  Export JSON
-                </button>
-              </div>
-              {history.length ? (
-                <div className="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Task / environment</th>
-                        <th>Policy</th>
-                        <th>Seed</th>
-                        <th>Result</th>
-                        <th>Steps</th>
-                        <th>Mean latency</th>
-                        <th />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {history.map((h) => (
-                        <tr key={h.id}>
-                          <td>
-                            <strong>{h.task}</strong>
-                            <small>{new Date(h.date).toLocaleString()}</small>
-                          </td>
-                          <td>{h.mode}</td>
-                          <td className="mono">{h.seed}</td>
-                          <td>
-                            <span
-                              className={`result-tag ${h.success ? "ok" : ""}`}
-                            >
-                              {h.success ? "Completed" : "Timed out"}
-                            </span>
-                          </td>
-                          <td>{h.steps}</td>
-                          <td>{h.latency.toFixed(1)} ms</td>
-                          <td>
-                            <button
-                              className="icon-button"
-                              aria-label={`Export run ${h.id}`}
-                              onClick={() =>
-                                download({
-                                  environment: "rapier-threejs-playground",
-                                  officialLibero: false,
-                                  ...h,
-                                })
-                              }
-                            >
-                              <ArrowDownToLine size={16} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="empty-state">
-                  <FlaskConical size={38} />
-                  <h2>Your first experiment starts here.</h2>
-                  <p>
-                    Complete an episode to save its actions, scores, and timing.
-                  </p>
+            <>
+              <section className="panel records-panel">
+                <div className="panel-heading">
+                  <div className="panel-title">
+                    Episode history{" "}
+                    <span className="tag">{history.length} RUNS</span>
+                  </div>
                   <button
-                    className="button primary"
-                    onClick={() => setTab("Playground")}
+                    className="button light small"
+                    disabled={!history.length}
+                    onClick={exportAll}
                   >
-                    Open playground <ArrowRight size={15} />
+                    <ArrowDownToLine size={14} />
+                    Export JSON
                   </button>
                 </div>
+                {history.length ? (
+                  <div className="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Task / environment</th>
+                          <th>Policy</th>
+                          <th>Seed</th>
+                          <th>Result</th>
+                          <th>Steps</th>
+                          <th>Mean latency</th>
+                          <th />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {history.map((h) => (
+                          <tr key={h.id}>
+                            <td>
+                              <strong>{h.task}</strong>
+                              <small>{new Date(h.date).toLocaleString()}</small>
+                            </td>
+                            <td>{h.mode}</td>
+                            <td className="mono">{h.seed}</td>
+                            <td>
+                              <span
+                                className={`result-tag ${h.success ? "ok" : ""}`}
+                              >
+                                {h.success ? "Completed" : "Timed out"}
+                              </span>
+                            </td>
+                            <td>{h.steps}</td>
+                            <td>{h.latency.toFixed(1)} ms</td>
+                            <td>
+                              <button
+                                className="button light"
+                                onClick={() => setInspectedRun(h.id)}
+                              >
+                                Inspect run
+                              </button>
+                              <button
+                                className="icon-button"
+                                aria-label={`Export run ${h.id}`}
+                                onClick={() =>
+                                  download({
+                                    environment: "rapier-threejs-playground",
+                                    officialLibero: false,
+                                    ...h,
+                                  })
+                                }
+                              >
+                                <ArrowDownToLine size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <FlaskConical size={38} />
+                    <h2>Your first experiment starts here.</h2>
+                    <p>
+                      Complete an episode to save its actions, scores, and
+                      timing.
+                    </p>
+                    <button
+                      className="button primary"
+                      onClick={() => setTab("Playground")}
+                    >
+                      Open playground <ArrowRight size={15} />
+                    </button>
+                  </div>
+                )}
+                <p className="table-note">
+                  Stored in this browser. Demo completions are not model
+                  benchmark results.
+                </p>
+              </section>
+              {inspectedRun && history.find((h) => h.id === inspectedRun) && (
+                <Timeline
+                  decisions={
+                    history.find((h) => h.id === inspectedRun)!.decisions
+                  }
+                  label={`Saved run ${inspectedRun}`}
+                />
               )}
-              <p className="table-note">
-                Stored in this browser. Demo completions are not model benchmark
-                results.
-              </p>
-            </section>
+            </>
           ) : (
             <>
               <div className="benchmark-summary">
@@ -1055,7 +1259,7 @@ export default function App() {
                     className={`benchmark-card panel ${taskId === t.id ? "is-selected" : ""}`}
                     key={t.id}
                     onClick={() => switchTask(t.id)}
-                    disabled={running || busy}
+                    disabled={running || busy || !!comparison}
                   >
                     <div className={`task-illustration task-${i}`}>
                       <span className="illustration-cube" />
@@ -1092,7 +1296,7 @@ export default function App() {
                     min="0"
                     max="999999"
                     value={seed}
-                    disabled={running || busy}
+                    disabled={running || busy || !!comparison}
                     onChange={(e) => {
                       const n = Math.max(
                         0,
@@ -1109,7 +1313,7 @@ export default function App() {
                     aria-label="Number of episodes"
                     value={batchSize}
                     onChange={(e) => setBatchSize(e.target.value)}
-                    disabled={running || busy}
+                    disabled={running || busy || !!comparison}
                   >
                     <option>5</option>
                     <option>10</option>
@@ -1118,7 +1322,7 @@ export default function App() {
                 </label>
                 <button
                   className="button primary"
-                  disabled={running || busy}
+                  disabled={running || busy || !!comparison}
                   onClick={() => {
                     reset();
                     setBatchRemaining(Number(batchSize));
@@ -1202,6 +1406,7 @@ export default function App() {
                   </p>
                   <button
                     className="button light"
+                    disabled={loading || running || busy || !!comparison}
                     onClick={() => {
                       reset();
                       setMode("demo");
@@ -1226,7 +1431,9 @@ export default function App() {
                   <div className="runtime-actions">
                     <button
                       className="button light"
-                      disabled={loading || !gpu || running || busy}
+                      disabled={
+                        loading || !gpu || running || busy || !!comparison
+                      }
                       onClick={() => {
                         if (browserReady) {
                           reset();
@@ -1280,6 +1487,7 @@ export default function App() {
                       Bridge URL
                       <input
                         aria-label="OpenJEV bridge URL"
+                        disabled={loading || running || busy || !!comparison}
                         value={endpoint}
                         onChange={(e) => {
                           setEndpoint(e.target.value);
@@ -1291,7 +1499,7 @@ export default function App() {
                     <div className="runtime-actions">
                       <button
                         className="button primary"
-                        disabled={loading || running || busy}
+                        disabled={loading || running || busy || !!comparison}
                         onClick={() => void connect()}
                       >
                         {loading ? (

@@ -2200,3 +2200,136 @@ td small {
 .browser-onboarding .button {
   margin-left: 0;
 }
+
+.research-panel {
+  padding: 20px;
+  margin-top: 20px;
+}
+.research-panel h2 {
+  font-size: 18px;
+  margin: 0;
+}
+.research-panel h3 {
+  font-size: 15px;
+  margin: 16px 0 8px;
+}
+.research-panel p {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #66715f;
+  overflow-wrap: anywhere;
+}
+.tool-heading,
+.tool-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.tool-heading {
+  justify-content: space-between;
+}
+.tool-heading span,
+.tool-actions span {
+  font-size: 13px;
+  color: #66715f;
+}
+.tool-actions label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.research-panel select {
+  padding: 8px;
+  border: 1px solid #d9dfd4;
+  border-radius: 5px;
+  max-width: 100%;
+}
+.research-panel .tool-actions {
+  margin: 12px 0;
+}
+.timeline-steps {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px 0;
+}
+.timeline-steps button {
+  flex-shrink: 0;
+  padding: 9px 12px;
+  border: 1px solid #d9dfd4;
+  border-radius: 5px;
+  font-size: 13px;
+}
+.timeline-steps .selected {
+  background: #e3ebdb;
+  border-color: #7a916b;
+}
+.replay-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+}
+.replay-grid > div {
+  min-width: 0;
+}
+.replay-scene {
+  position: relative;
+  height: 320px;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.observation-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.trace-scores {
+  list-style: none;
+  padding: 0;
+  font-size: 13px;
+}
+.trace-scores li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #e5e9e0;
+  padding: 8px 0;
+}
+.speed-result dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+.speed-result dt {
+  font-size: 13px;
+  color: #66715f;
+}
+.speed-result dd {
+  margin: 8px 0;
+  font-size: 24px;
+}
+.research-panel pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.research-panel summary {
+  cursor: pointer;
+  font-size: 14px;
+  margin: 12px 0;
+}
+@media (max-width: 700px) {
+  .research-panel {
+    padding: 14px;
+  }
+  .replay-grid {
+    grid-template-columns: 1fr;
+  }
+  .tool-actions label {
+    flex-wrap: wrap;
+  }
+  .research-panel .button {
+    white-space: normal;
+  }
+}

@@ -12,7 +12,7 @@ An independent robotics playground built with Three.js, React, TypeScript, and V
 2. Click **Load Open-Jev · 480 MB**. Weights download once and are cached by your browser.
 3. Watch candidate probabilities and measured decision latency as the robot takes actions.
 
-No Python, local server, or API key is required. The quantized model runs in a Web Worker on WebGPU, using WebGPU. This quantized model requires WebGPU; the scripted preview also works without it. The loading panel reports actual download progress and supports cancellation. The no-download scripted preview remains available.
+No Python, local server, or API key is required. The quantized model runs in a Web Worker on WebGPU. This quantized model requires WebGPU; the scripted preview also works without it. The loading panel reports actual download progress and supports cancellation. The no-download scripted preview remains available.
 
 The browser model is **Kotoba's Open-Jev DeBERTa**, not AlexWortega's Qwen 4B. It scores all five choices in one forward pass without generating text. Robotics is outside its training domains; displayed probabilities are not a guarantee of successful robot control.
 
@@ -44,6 +44,15 @@ The browser scene is a **LIBERO-inspired physics playground**, not the official 
 Browser model mode receives text observations from the simulator; it is an integration demonstration, not a visual generalization evaluation. The scene-camera preview is not sent to the model. The original OpenJEV 4B checkpoint has not been converted to a browser runtime here.
 
 Browser DeBERTa scores use a softmax over candidate logits at the source model’s temperature of 1.05. These probabilities sum to one but are not calibrated on robotics. The optional AlexWortega bridge returns independent NLI entailment probabilities, which need not sum to one.
+
+## Comparing, editing and inspecting runs
+
+- **A/B comparison:** load Open-Jev (or connect the optional bridge), select the comparison model, and run a paired evaluation. The scripted baseline and model start with the same task, seed, object home position, destination and obstacle. Each completed run stores its pair ID and role. Paired results show completion, actual action count, median/p95 decision latency, and JSON export. Manual layout edits are locked until the comparison ends or is cancelled. The baseline is a staged script, not a VLA; this does not measure official LIBERO performance.
+- **Change environment:** between motions, move the cube or destination using the preset buttons, or add/remove an obstacle. Editing pauses the episode; resume to evaluate the new observation. A held cube cannot be teleported. The obstacle has a Rapier collider, and a conservative path check stops blocked transfers. The five available actions do not include obstacle avoidance: remove the obstacle or move the destination to continue. Target placement updates both rendering and physics.
+- **Decision timeline:** inspect each decision's saved text input, scene state, candidate scores, selected action and latency. Play replay to step through reconstructed 3D states without changing the live episode or calling the model. This is a sequence of state snapshots, not video or continuous motion playback. Completed runs retain their snapshots in browser history; older records without snapshots still export normally. Use **Experiments → Inspect run** after a reload.
+- **Speed measurement:** run 5, 10 or 20 decisions against a fixed observation, after two excluded warm-ups. Results include median, nearest-rank p95, raw samples, warm-up times, source and browser/device metadata. The episode does not advance. Cancellation discards partial results. Browser setup timing separately reports the asset/tokenizer phase (including cache access) and session preparation; it is not a network-only download timer. Decision latency is client end-to-end time, including processing and worker/bridge overhead, not GPU kernel time. Scripted timing is explicitly labeled as having no model inference.
+
+Trace exports use schema `robotics-playground/trace-v2`; full history uses `robotics-playground/v2`. Browser history keeps up to 50 completed runs. The speed report can be exported separately. Camera images are never sent to the model; the visible text observation is the model's state input.
 
 ## GitHub Pages
 
@@ -191,3 +200,5 @@ The requested MapMyVisitors script loads from an external service for tracking o
 - [OpenVLA LIBERO evaluation](https://github.com/openvla/openvla/blob/main/experiments/robot/libero/run_libero_eval.py)
 - [Browser Open-Jev model card and input contract](https://huggingface.co/onnx-community/open-jev-deberta-v3-large-ONNX)
 - [Transformers.js](https://github.com/huggingface/transformers.js)
+
+For real browser-model validation of speed measurement and A/B comparison, run `SMOKE_EXPERIMENTS=1 node scripts/browser-model-smoke.mjs` with the production preview running. It reuses the local browser cache; model task success is not assumed.
