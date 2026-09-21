@@ -1,5 +1,12 @@
 import { test, expect } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  // Keep synthetic test traffic out of the visitor counter.
+  await page.route("**/mapmyvisitors.com/**", (route) =>
+    route.fulfill({ contentType: "application/javascript", body: "" }),
+  );
+});
+
 test("episode runs, pauses, completes and exports measured trace", async ({
   page,
 }) => {
