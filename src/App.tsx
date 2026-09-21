@@ -22,7 +22,6 @@ import {
   Play,
   Plus,
   RotateCcw,
-  ShieldCheck,
   SlidersHorizontal,
   Terminal,
   Workflow,
@@ -40,16 +39,6 @@ import {
 } from "./simulation";
 import { decide, loadBrowser, cancelBrowserLoad, type Mode } from "./inference";
 
-function Logo() {
-  return (
-    <span className="logo-mark">
-      <span />
-      <span />
-      <span />
-      <span />
-    </span>
-  );
-}
 function download(data: unknown) {
   const url = URL.createObjectURL(
     new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
@@ -328,17 +317,6 @@ export default function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <a
-          className="brand"
-          href={import.meta.env.BASE_URL}
-          aria-label="Playground home"
-        >
-          <Logo />
-          <span>
-            playground
-            <small>ROBOTICS PLAYGROUND</small>
-          </span>
-        </a>
         <div className="nav-label">DEMO</div>
         <nav>
           {[
@@ -384,18 +362,6 @@ export default function App() {
           Browser model
           <ArrowUpRight size={14} className="push" />
         </a>
-        <div className="sidebar-bottom">
-          <div className="local-card">
-            <span className="local-icon">
-              <ShieldCheck size={19} />
-            </span>
-            <strong>Your machine. Your models.</strong>
-            <p>A model, a robot, and your browser.</p>
-            <button onClick={() => setModal("runtime")}>
-              Configure runtime <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
       </aside>
       <div className="main-shell">
         <header className="topbar">
@@ -403,9 +369,6 @@ export default function App() {
             Robotics demo <ChevronRight size={13} /> <span>{tab}</span>
           </div>
           <div className="topbar-right">
-            <span className="local-status">
-              <i /> On-device inference
-            </span>
             <a
               href="https://github.com/devsangho/jev-robotics-example"
               target="_blank"
@@ -425,17 +388,16 @@ export default function App() {
         <main>
           <div className="page-heading">
             <div>
-              <div className="eyebrow">OBSERVE → EVALUATE → ACT</div>
               <h1>
                 {tab === "Playground"
-                  ? "Fast judgments. Measured locally."
+                  ? "Robotics playground"
                   : tab === "Experiments"
-                    ? "Every run, a little insight."
-                    : "Put your policy to the test."}
+                    ? "Run history"
+                    : "Evaluate across seeds"}
               </h1>
               <p>
                 {tab === "Playground"
-                  ? "One forward pass. Candidate scores. A robot’s next move—without generating a sentence."
+                  ? "Choose a task, run the robot, and compare action scores and decision latency."
                   : tab === "Experiments"
                     ? "Inspect and export the episodes you have run on this device."
                     : "Repeat tasks across seeds and inspect local evaluation results."}
@@ -451,14 +413,12 @@ export default function App() {
                 className="browser-onboarding"
                 aria-label="Run locally in your browser"
               >
-                <span className="onboarding-icon">
-                  <Cpu size={22} />
-                </span>
                 <div>
-                  <strong>One forward pass. One decision.</strong>
+                  <strong>Run Open-Jev in your browser</strong>
                   <p>
-                    Open-Jev DeBERTa · No server, no Python, no API key.
-                    Download once, run on your device.
+                    Open-Jev DeBERTa · 480 MB download · WebGPU required.
+                    Evaluate actions in one forward pass, without a local
+                    server.
                   </p>
                   {progress && (
                     <p className="browser-progress" role="status">
@@ -970,23 +930,8 @@ export default function App() {
                     </div>
                   </div>
                 </section>
-                <section className="next-card">
-                  <span className="next-icon">
-                    <FlaskConical size={20} />
-                  </span>
-                  <div>
-                    <h3>A single task is just the start.</h3>
-                    <p>Try different seeds. Compare your runs.</p>
-                    <button onClick={() => setTab("Benchmarks")}>
-                      Explore benchmarks <ArrowRight size={14} />
-                    </button>
-                  </div>
-                </section>
               </div>
               <div className="honesty-note">
-                <span>
-                  <ShieldCheck size={13} /> Local-first by design
-                </span>
                 <p>
                   LIBERO-inspired scene · {modeNames[mode]} · not an official
                   LIBERO evaluation.
@@ -1205,16 +1150,6 @@ export default function App() {
               </div>
             </>
           )}
-          <footer>
-            <span>
-              <Logo /> Playground <span className="footer-divider">/</span> An
-              independent robotics experiment.
-            </span>
-            <span>
-              Built for exploration.{" "}
-              <span className="orange-text">Stay curious.</span>
-            </span>
-          </footer>
         </main>
       </div>
       {modal && (

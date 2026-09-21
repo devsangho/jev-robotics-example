@@ -14,7 +14,7 @@ test("episode runs, pauses, completes and exports measured trace", async ({
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Fast judgments. Measured locally." }),
+    page.getByRole("heading", { name: "Robotics playground" }),
   ).toBeVisible();
   await expect(page.locator("canvas")).toBeVisible();
   await page.getByRole("button", { name: "Step once", exact: true }).click();
